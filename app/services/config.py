@@ -48,6 +48,14 @@ DEFAULT_CONFIG = {
     "youtube": {
         "max_resolution": 480,
         "default_volume": 80
+    },
+    "dimming": {
+        "enabled": True,
+        "day_start": "07:00",
+        "night_start": "21:00",
+        "day_brightness": 100,
+        "night_brightness": 30,
+        "transition_minutes": 30
     }
 }
 

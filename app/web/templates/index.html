@@ -44,6 +44,10 @@
                     <i class="fab fa-bluetooth-b"></i>
                     <span>Bluetooth</span>
                 </a>
+                <a href="#" class="nav-item" data-tab="dimming">
+                    <i class="fas fa-sun"></i>
+                    <span>Dimming</span>
+                </a>
                 <a href="#" class="nav-item" data-tab="logs">
                     <i class="fas fa-list-ul"></i>
                     <span>Logs</span>
@@ -51,7 +55,7 @@
             </nav>
 
             <div class="sidebar-footer">
-                <div class="version">v0.1.0</div>
+                <div class="version">v0.1.2</div>
             </div>
         </aside>
 
@@ -410,6 +414,103 @@
                             <i class="fas fa-plug"></i> Auto-reconnect on startup
                         </label>
                     </div>
+                </div>
+            </section>
+
+            <!-- Dimming Tab -->
+            <section id="dimming" class="tab-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-sun"></i> Auto Dimming</h1>
+                    <p>Automatic display brightness control</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-power-off"></i> Enable Auto-Dimming</h2>
+                    </div>
+                    <div class="card-body">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="dimming-enabled" checked>
+                            <span class="checkmark"></span>
+                            <i class="fas fa-lightbulb"></i> Enable automatic brightness adjustment
+                        </label>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-clock"></i> Schedule</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="dimming-day-start"><i class="fas fa-sunrise"></i> Day Starts At</label>
+                                <input type="time" id="dimming-day-start" value="07:00">
+                            </div>
+                            <div class="form-group">
+                                <label for="dimming-night-start"><i class="fas fa-moon"></i> Night Starts At</label>
+                                <input type="time" id="dimming-night-start" value="21:00">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="dimming-transition"><i class="fas fa-hourglass-half"></i> Transition Duration</label>
+                            <select id="dimming-transition">
+                                <option value="0">Instant</option>
+                                <option value="15">15 minutes</option>
+                                <option value="30" selected>30 minutes</option>
+                                <option value="60">1 hour</option>
+                            </select>
+                            <span class="form-hint">How long to fade between brightness levels</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-adjust"></i> Brightness Levels</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="dimming-day-brightness">
+                                <i class="fas fa-sun"></i> Day Brightness: <span id="day-brightness-value">100%</span>
+                            </label>
+                            <input type="range" id="dimming-day-brightness" min="10" max="100" value="100" class="volume-slider">
+                        </div>
+                        <div class="form-group">
+                            <label for="dimming-night-brightness">
+                                <i class="fas fa-moon"></i> Night Brightness: <span id="night-brightness-value">30%</span>
+                            </label>
+                            <input type="range" id="dimming-night-brightness" min="10" max="100" value="30" class="volume-slider">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-sliders"></i> Manual Override</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="dimming-manual">
+                                <i class="fas fa-hand-pointer"></i> Manual Brightness: <span id="manual-brightness-value">--</span>
+                            </label>
+                            <input type="range" id="dimming-manual" min="10" max="100" value="100" class="volume-slider">
+                        </div>
+                        <div class="btn-row">
+                            <button class="btn btn-primary" id="dimming-apply-manual">
+                                <i class="fas fa-check"></i> Apply Manual
+                            </button>
+                            <button class="btn" id="dimming-restore-auto">
+                                <i class="fas fa-sync"></i> Restore Auto
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn btn-primary btn-lg" id="save-dimming">
+                        <i class="fas fa-save"></i> Save Dimming Settings
+                    </button>
                 </div>
             </section>
 

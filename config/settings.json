@@ -17,7 +17,7 @@
     "units": "imperial",
     "update_interval_minutes": 5
   },
-  "theme": "neon",
+  "theme": "dark",
   "audio": {
     "output_device": "default",
     "volume": 80

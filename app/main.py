@@ -28,9 +28,10 @@ from app.display.weather import (
 class TablePiApp:
     """Main application class."""
 
-    def __init__(self, state: SharedState, queues: Queues):
+    def __init__(self, state: SharedState, queues: Queues, services: dict = None):
         self.state = state
         self.queues = queues
+        self.services = services or {}
 
         self.screen = None
         self.clock = None
@@ -50,6 +51,9 @@ class TablePiApp:
         # View state
         self.current_view = 'main'  # 'main' or 'hourly'
         self.selected_day = None
+
+        # YouTube playback state (for window management)
+        self._youtube_active = False
 
     def init_display(self):
         """Initialize PyGame and display."""
@@ -206,10 +210,31 @@ class TablePiApp:
         """Handle a command from the web UI."""
         cmd_type = cmd.get('type')
 
-        if cmd_type == 'youtube_play':
-            # TODO: Implement YouTube playback
-            self.queues.log_action(f"YouTube play: {cmd.get('video_id')}")
+        # YouTube commands
+        if cmd_type.startswith('youtube_'):
+            youtube_service = self.services.get('youtube')
+            if youtube_service:
+                youtube_service.send_command(cmd)
 
+        # Audio commands
+        elif cmd_type.startswith('audio_'):
+            audio_service = self.services.get('audio')
+            if audio_service:
+                audio_service.send_command(cmd)
+
+        # Bluetooth commands
+        elif cmd_type.startswith('bluetooth_'):
+            bluetooth_service = self.services.get('bluetooth')
+            if bluetooth_service:
+                bluetooth_service.send_command(cmd)
+
+        # Dimming commands
+        elif cmd_type.startswith('dimming_'):
+            dimming_service = self.services.get('dimming')
+            if dimming_service:
+                dimming_service.send_command(cmd)
+
+        # Theme change
         elif cmd_type == 'theme_change':
             theme_name = cmd.get('theme')
             config = self.state.get_config()
@@ -362,9 +387,9 @@ class TablePiApp:
         pygame.quit()
 
 
-def run_app(state: SharedState, queues: Queues):
+def run_app(state: SharedState, queues: Queues, services: dict = None):
     """Run the main application."""
-    app = TablePiApp(state, queues)
+    app = TablePiApp(state, queues, services)
     app.init_display()
     app.run()
 
@@ -422,16 +447,69 @@ def main():
     except ImportError:
         queues.log_info('Log service not available')
 
+    # YouTube service
+    youtube_service = None
+    try:
+        from app.services.youtube import YouTubeService
+        youtube_service = YouTubeService(state, queues)
+        youtube_service.start()
+        threads.append(youtube_service)
+    except ImportError:
+        queues.log_info('YouTube service not available')
+
+    # Audio service
+    audio_service = None
+    try:
+        from app.services.audio import AudioService
+        audio_service = AudioService(state, queues)
+        audio_service.start()
+        threads.append(audio_service)
+    except ImportError:
+        queues.log_info('Audio service not available')
+
+    # Bluetooth service
+    bluetooth_service = None
+    try:
+        from app.services.bluetooth import BluetoothService
+        bluetooth_service = BluetoothService(state, queues)
+        bluetooth_service.start()
+        threads.append(bluetooth_service)
+    except ImportError:
+        queues.log_info('Bluetooth service not available')
+
+    # Dimming service
+    dimming_service = None
+    try:
+        from app.services.dimming import DimmingService
+        dimming_service = DimmingService(state, queues)
+        dimming_service.start()
+        threads.append(dimming_service)
+    except ImportError:
+        queues.log_info('Dimming service not available')
+
+    # Collect services for command routing
+    services = {
+        'weather': weather_service,
+        'youtube': youtube_service,
+        'audio': audio_service,
+        'bluetooth': bluetooth_service,
+        'dimming': dimming_service,
+    }
+
     try:
         from app.web.server import run_flask_thread
-        flask_thread = Thread(target=run_flask_thread, args=(state, queues, weather_service), daemon=True)
+        flask_thread = Thread(
+            target=run_flask_thread,
+            args=(state, queues, weather_service, bluetooth_service),
+            daemon=True
+        )
         flask_thread.start()
         threads.append(flask_thread)
     except ImportError:
         queues.log_info('Web server not available')
 
     # Run main display
-    run_app(state, queues)
+    run_app(state, queues, services)
 
     # Cleanup
     shutdown_event.set()

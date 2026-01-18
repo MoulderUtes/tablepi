@@ -11,6 +11,8 @@ document.addEventListener('DOMContentLoaded', () => {
     loadThemes();
     loadLogs();
     loadWeatherStatus();
+    loadAudioDevices();
+    loadDimmingSettings();
     initEventListeners();
 
     // Periodically update weather status
@@ -448,6 +450,53 @@ async function youtubeControl(command) {
 }
 
 // Audio
+async function loadAudioDevices() {
+    try {
+        const response = await fetch('/api/audio/devices');
+        const data = await response.json();
+
+        const select = document.getElementById('audio-device');
+        select.innerHTML = '';
+
+        if (data.devices && data.devices.length > 0) {
+            data.devices.forEach(device => {
+                const option = document.createElement('option');
+                option.value = device.id;
+                option.textContent = device.name;
+                if (device.id === data.device) {
+                    option.selected = true;
+                }
+                select.appendChild(option);
+            });
+        } else {
+            const option = document.createElement('option');
+            option.value = 'default';
+            option.textContent = 'Default System Output';
+            select.appendChild(option);
+        }
+
+        // Update volume slider
+        if (data.volume !== undefined) {
+            document.getElementById('audio-volume').value = data.volume;
+            document.getElementById('volume-value').textContent = data.volume + '%';
+        }
+    } catch (error) {
+        console.error('Failed to load audio devices:', error);
+    }
+}
+
+async function setAudioDevice(deviceId) {
+    try {
+        await fetch('/api/audio/device', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ device: deviceId })
+        });
+    } catch (error) {
+        console.error('Failed to set audio device:', error);
+    }
+}
+
 async function setVolume(value) {
     document.getElementById('volume-value').textContent = value + '%';
 
@@ -607,6 +656,98 @@ function exportLogs() {
     URL.revokeObjectURL(url);
 }
 
+// Dimming
+async function loadDimmingSettings() {
+    try {
+        const response = await fetch('/api/dimming/settings');
+        const settings = await response.json();
+
+        document.getElementById('dimming-enabled').checked = settings.enabled !== false;
+        document.getElementById('dimming-day-start').value = settings.day_start || '07:00';
+        document.getElementById('dimming-night-start').value = settings.night_start || '21:00';
+        document.getElementById('dimming-transition').value = settings.transition_minutes || 30;
+
+        const dayBrightness = settings.day_brightness || 100;
+        const nightBrightness = settings.night_brightness || 30;
+
+        document.getElementById('dimming-day-brightness').value = dayBrightness;
+        document.getElementById('day-brightness-value').textContent = dayBrightness + '%';
+
+        document.getElementById('dimming-night-brightness').value = nightBrightness;
+        document.getElementById('night-brightness-value').textContent = nightBrightness + '%';
+
+    } catch (error) {
+        console.error('Failed to load dimming settings:', error);
+    }
+}
+
+async function saveDimmingSettings() {
+    const saveBtn = document.getElementById('save-dimming');
+    const originalContent = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+    saveBtn.disabled = true;
+
+    const settings = {
+        enabled: document.getElementById('dimming-enabled').checked,
+        day_start: document.getElementById('dimming-day-start').value,
+        night_start: document.getElementById('dimming-night-start').value,
+        transition_minutes: parseInt(document.getElementById('dimming-transition').value) || 30,
+        day_brightness: parseInt(document.getElementById('dimming-day-brightness').value) || 100,
+        night_brightness: parseInt(document.getElementById('dimming-night-brightness').value) || 30
+    };
+
+    try {
+        const response = await fetch('/api/dimming/settings', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(settings)
+        });
+
+        if (response.ok) {
+            saveBtn.innerHTML = '<i class="fas fa-check"></i> Saved!';
+            setTimeout(() => {
+                saveBtn.innerHTML = originalContent;
+                saveBtn.disabled = false;
+            }, 2000);
+        } else {
+            saveBtn.innerHTML = '<i class="fas fa-times"></i> Failed';
+            setTimeout(() => {
+                saveBtn.innerHTML = originalContent;
+                saveBtn.disabled = false;
+            }, 2000);
+        }
+    } catch (error) {
+        console.error('Failed to save dimming settings:', error);
+        saveBtn.innerHTML = '<i class="fas fa-times"></i> Failed';
+        setTimeout(() => {
+            saveBtn.innerHTML = originalContent;
+            saveBtn.disabled = false;
+        }, 2000);
+    }
+}
+
+async function applyManualBrightness() {
+    const brightness = document.getElementById('dimming-manual').value;
+
+    try {
+        await fetch('/api/dimming/brightness', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ brightness: parseInt(brightness) })
+        });
+    } catch (error) {
+        console.error('Failed to set manual brightness:', error);
+    }
+}
+
+async function restoreAutoDimming() {
+    try {
+        await fetch('/api/dimming/auto', { method: 'POST' });
+    } catch (error) {
+        console.error('Failed to restore auto-dimming:', error);
+    }
+}
+
 // Event listeners
 function initEventListeners() {
     // Settings
@@ -630,6 +771,9 @@ function initEventListeners() {
     document.getElementById('yt-vol-down').addEventListener('click', () => youtubeControl('volume_down'));
 
     // Audio
+    document.getElementById('audio-device').addEventListener('change', (e) => {
+        setAudioDevice(e.target.value);
+    });
     document.getElementById('audio-volume').addEventListener('input', (e) => {
         setVolume(e.target.value);
     });
@@ -637,6 +781,22 @@ function initEventListeners() {
     // Bluetooth
     document.getElementById('bt-scan').addEventListener('click', bluetoothScan);
     document.getElementById('bt-disconnect').addEventListener('click', bluetoothDisconnect);
+
+    // Dimming
+    document.getElementById('save-dimming').addEventListener('click', saveDimmingSettings);
+    document.getElementById('dimming-apply-manual').addEventListener('click', applyManualBrightness);
+    document.getElementById('dimming-restore-auto').addEventListener('click', restoreAutoDimming);
+
+    // Dimming slider value updates
+    document.getElementById('dimming-day-brightness').addEventListener('input', (e) => {
+        document.getElementById('day-brightness-value').textContent = e.target.value + '%';
+    });
+    document.getElementById('dimming-night-brightness').addEventListener('input', (e) => {
+        document.getElementById('night-brightness-value').textContent = e.target.value + '%';
+    });
+    document.getElementById('dimming-manual').addEventListener('input', (e) => {
+        document.getElementById('manual-brightness-value').textContent = e.target.value + '%';
+    });
 
     // Logs
     document.getElementById('log-filter').addEventListener('change', loadLogs);

@@ -615,7 +615,7 @@ class ForecastGraphWidget:
 
 
 # Version constant
-VERSION = "0.1.1"
+VERSION = "0.1.2"
 
 
 class StatusBarWidget:

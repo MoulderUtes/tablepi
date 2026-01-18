@@ -47,6 +47,14 @@ See [PI_SETUP.md](PI_SETUP.md) for detailed Raspberry Pi setup instructions.
 
 ## Changelog
 
+### v0.1.2
+- **YouTube Playback** - Full YouTube video playback via mpv + yt-dlp with touch-friendly on-screen controls (play/pause, seek, volume). Videos play fullscreen with automatic return to clock display when finished.
+- **Audio Device Management** - Enumerate and switch between PulseAudio output devices (speakers, HDMI, Bluetooth). Volume control via web UI with real-time updates.
+- **Bluetooth Device Scanning** - Scan for nearby Bluetooth devices, pair with speakers, and auto-connect on startup. Connection status shown in web UI.
+- **Auto Dimming** - Automatic display brightness control based on time of day. Configurable day/night schedules with smooth transitions. Supports Raspberry Pi backlight and xrandr fallback.
+- **Hourly Forecast Filtering** - Hourly forecast view now shows only the selected day's hours instead of all 48 hours
+- **Improved Time Labels** - Hourly chart now displays proper 12-hour format with AM/PM (12AM, 3AM, 12PM, etc.)
+
 ### v0.1.1
 - **Hourly Forecast Widget** - View 48-hour forecast with scrollable display showing time, icon, temp, precipitation, and wind
 - **Daily Detail Widget** - Tap any day on the 7-day graph to see detailed breakdown including morning/day/evening/night temps, humidity, wind, precipitation, UV index, and sunrise/sunset times
@@ -68,12 +76,6 @@ See [PI_SETUP.md](PI_SETUP.md) for detailed Raspberry Pi setup instructions.
 - Activity logging with filtering and export
 - Multi-threaded architecture for responsive UI
 - Config hot-reload via file watcher
-
-### Planned
-- Full YouTube playback via mpv
-- Bluetooth device scanning and pairing
-- Audio device enumeration and switching
-- Auto dimming based on time of day
 
 ## License
 

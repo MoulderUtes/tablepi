@@ -523,18 +523,20 @@ socketio = SocketIO(app, cors_allowed_origins="*")
 _state: Optional[SharedState] = None
 _queues: Optional[Queues] = None
 _weather_service = None  # Reference to weather service for refresh
+_bluetooth_service = None  # Reference to bluetooth service for device list
 
 # In-memory log buffer
 _log_buffer = []
 _log_buffer_max = 500
 
 
-def init_server(state: SharedState, queues: Queues, weather_service=None):
+def init_server(state: SharedState, queues: Queues, weather_service=None, bluetooth_service=None):
     """Initialize the server with shared state and queues."""
-    global _state, _queues, _weather_service
+    global _state, _queues, _weather_service, _bluetooth_service
     _state = state
     _queues = queues
     _weather_service = weather_service
+    _bluetooth_service = bluetooth_service
 
 
 # ============ Routes ============
@@ -812,7 +814,11 @@ def set_audio_device():
         return jsonify({'error': f'Invalid device name: {result}'}), 400
     device = result
 
-    _state.set_audio_device(device)
+    # Send command to audio service
+    _queues.command.put({
+        'type': 'audio_set_device',
+        'device': device
+    })
 
     config = _state.get_config()
     if 'audio' not in config:
@@ -837,7 +843,11 @@ def set_volume():
         return jsonify({'error': result}), 400
     volume = result
 
-    _state.set_audio_volume(volume)
+    # Send command to audio service
+    _queues.command.put({
+        'type': 'audio_set_volume',
+        'volume': volume
+    })
 
     config = _state.get_config()
     if 'audio' not in config:
@@ -895,6 +905,116 @@ def bluetooth_disconnect():
     """Disconnect Bluetooth device."""
     _queues.command.put({'type': 'bluetooth_disconnect'})
     _queues.log_action('Bluetooth disconnect')
+    return jsonify({'success': True})
+
+
+@app.route('/api/bluetooth/devices', methods=['GET'])
+def bluetooth_devices():
+    """Get list of discovered Bluetooth devices."""
+    if _bluetooth_service is None:
+        return jsonify({'devices': [], 'scanning': False, 'error': 'Bluetooth service not available'}), 503
+
+    devices = _bluetooth_service.get_discovered_devices()
+    scanning = _bluetooth_service.is_scanning()
+
+    return jsonify({
+        'devices': devices,
+        'scanning': scanning
+    })
+
+
+# ============ Dimming API ============
+
+@app.route('/api/dimming/settings', methods=['GET'])
+def get_dimming_settings():
+    """Get current dimming settings."""
+    config = _state.get_config()
+    dimming = config.get('dimming', {})
+    return jsonify(dimming)
+
+
+@app.route('/api/dimming/settings', methods=['POST'])
+def save_dimming_settings():
+    """Save dimming settings."""
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+
+    config = _state.get_config()
+    if 'dimming' not in config:
+        config['dimming'] = {}
+
+    # Validate and update dimming settings
+    if 'enabled' in data:
+        config['dimming']['enabled'] = bool(data['enabled'])
+
+    if 'day_start' in data:
+        # Validate time format HH:MM
+        import re
+        if re.match(r'^\d{2}:\d{2}$', data['day_start']):
+            config['dimming']['day_start'] = data['day_start']
+
+    if 'night_start' in data:
+        import re
+        if re.match(r'^\d{2}:\d{2}$', data['night_start']):
+            config['dimming']['night_start'] = data['night_start']
+
+    if 'day_brightness' in data:
+        try:
+            brightness = int(data['day_brightness'])
+            config['dimming']['day_brightness'] = max(10, min(100, brightness))
+        except (ValueError, TypeError):
+            pass
+
+    if 'night_brightness' in data:
+        try:
+            brightness = int(data['night_brightness'])
+            config['dimming']['night_brightness'] = max(10, min(100, brightness))
+        except (ValueError, TypeError):
+            pass
+
+    if 'transition_minutes' in data:
+        try:
+            minutes = int(data['transition_minutes'])
+            config['dimming']['transition_minutes'] = max(0, min(60, minutes))
+        except (ValueError, TypeError):
+            pass
+
+    if save_config(config):
+        _state.set_config(config)
+        _queues.log_action('Dimming settings updated')
+        return jsonify({'success': True})
+    else:
+        return jsonify({'error': 'Failed to save settings'}), 500
+
+
+@app.route('/api/dimming/brightness', methods=['POST'])
+def set_manual_brightness():
+    """Set manual brightness override."""
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+
+    try:
+        brightness = int(data.get('brightness', 100))
+        brightness = max(10, min(100, brightness))
+    except (ValueError, TypeError):
+        return jsonify({'error': 'Invalid brightness value'}), 400
+
+    _queues.command.put({
+        'type': 'dimming_set_brightness',
+        'brightness': brightness
+    })
+
+    _queues.log_action(f'Manual brightness set to {brightness}%')
+    return jsonify({'success': True})
+
+
+@app.route('/api/dimming/auto', methods=['POST'])
+def restore_auto_dimming():
+    """Restore automatic dimming."""
+    _queues.command.put({'type': 'dimming_auto'})
+    _queues.log_action('Restored auto-dimming')
     return jsonify({'success': True})
 
 
@@ -972,9 +1092,9 @@ def process_log_queue():
             print(f"Log processing error: {e}")
 
 
-def run_flask_thread(state: SharedState, queues: Queues, weather_service=None):
+def run_flask_thread(state: SharedState, queues: Queues, weather_service=None, bluetooth_service=None):
     """Run Flask server in a thread."""
-    init_server(state, queues, weather_service)
+    init_server(state, queues, weather_service, bluetooth_service)
 
     config = state.get_config()
     web_config = config.get('web', {})
