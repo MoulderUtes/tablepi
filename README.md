@@ -73,6 +73,7 @@ See [PI_SETUP.md](PI_SETUP.md) for detailed Raspberry Pi setup instructions.
 - Full YouTube playback via mpv
 - Bluetooth device scanning and pairing
 - Audio device enumeration and switching
+- Auto dimming based on time of day
 
 ## License
 

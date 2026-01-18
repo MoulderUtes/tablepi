@@ -910,9 +910,16 @@ class HourlyForecastWidget:
             # Time labels (every 3 hours)
             if i % 3 == 0:
                 dt = datetime.fromtimestamp(hour['dt'], tz)
-                time_str = dt.strftime('%I%p').lstrip('0').lower()
-                # Shorter format
-                time_str = time_str.replace('am', 'a').replace('pm', 'p')
+                # Format as "12AM", "3AM", "12PM", "3PM" etc.
+                hour_num = dt.hour
+                if hour_num == 0:
+                    time_str = "12AM"
+                elif hour_num < 12:
+                    time_str = f"{hour_num}AM"
+                elif hour_num == 12:
+                    time_str = "12PM"
+                else:
+                    time_str = f"{hour_num - 12}PM"
                 label_surface = self._small_font.render(time_str, True, self.theme.graph_label_color_rgb)
                 label_x = int(x) - label_surface.get_width() // 2
                 self.screen.blit(label_surface, (label_x, graph_bottom + 4))
