@@ -29,11 +29,12 @@ A Raspberry Pi-powered tabletop display featuring a clock, weather information, 
 3. Run `./install.sh`
 4. Access the web UI at `http://tablepi.local:5000`
 
-See [PLANNING_MAIN.md](PLANNING_MAIN.md) for detailed setup instructions.
+See [PI_SETUP.md](PI_SETUP.md) for detailed Raspberry Pi setup instructions.
 
 ## Documentation
 
-- [PLANNING_MAIN.md](PLANNING_MAIN.md) - Core architecture, setup, and configuration
+- [PI_SETUP.md](PI_SETUP.md) - Raspberry Pi installation and setup guide
+- [PLANNING_MAIN.md](PLANNING_MAIN.md) - Core architecture and configuration
 - [PLANNING_WEATHER.md](PLANNING_WEATHER.md) - Weather module details
 - [PLANNING_YOUTUBE.md](PLANNING_YOUTUBE.md) - YouTube playback details
 
