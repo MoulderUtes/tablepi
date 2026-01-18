@@ -732,6 +732,7 @@ class HourlyForecastWidget:
         self._weather_data: Optional[dict] = None
         self._scroll_offset: int = 0
         self._hours_to_show: int = 24  # Show 24 hours at a time
+        self._selected_day: int = 0  # Which day to filter hourly data for
 
         self._init_fonts()
 
@@ -758,12 +759,45 @@ class HourlyForecastWidget:
         """Set the weather data to display."""
         self._weather_data = data
 
+    def set_selected_day(self, day_idx: int):
+        """Set which day to filter hourly data for."""
+        if day_idx != self._selected_day:
+            self._selected_day = day_idx
+            self._scroll_offset = 0  # Reset scroll when day changes
+
     def scroll(self, direction: int):
         """Scroll the hourly view left or right."""
         if not self._weather_data or not self._weather_data.get('hourly'):
             return
-        max_offset = max(0, len(self._weather_data['hourly']) - self._hours_to_show)
+        # Use filtered data for scroll bounds
+        filtered_hourly = self._get_hourly_for_selected_day()
+        max_offset = max(0, len(filtered_hourly) - self._hours_to_show)
         self._scroll_offset = max(0, min(max_offset, self._scroll_offset + direction))
+
+    def _get_hourly_for_selected_day(self) -> list:
+        """Get hourly data filtered to only include hours from the selected day."""
+        if not self._weather_data:
+            return []
+
+        all_hourly = self._weather_data.get('hourly', [])[:48]
+        daily = self._weather_data.get('daily', [])
+
+        if not all_hourly or not daily or self._selected_day >= len(daily):
+            return []
+
+        # Get the selected day's date
+        selected_day_data = daily[self._selected_day]
+        selected_day_dt = datetime.fromtimestamp(selected_day_data['dt'])
+        selected_date = selected_day_dt.date()
+
+        # Filter hourly data to only include hours from that day
+        filtered_hourly = []
+        for hour in all_hourly:
+            hour_dt = datetime.fromtimestamp(hour['dt'])
+            if hour_dt.date() == selected_date:
+                filtered_hourly.append(hour)
+
+        return filtered_hourly
 
     def render(self, rect: pygame.Rect) -> None:
         """Render the hourly forecast graph in the given rectangle."""
@@ -771,19 +805,24 @@ class HourlyForecastWidget:
             self._render_no_data(rect)
             return
 
-        all_hourly = self._weather_data['hourly'][:48]
-        if not all_hourly:
-            self._render_no_data(rect)
+        # Get hourly data filtered for the selected day
+        filtered_hourly = self._get_hourly_for_selected_day()
+
+        if not filtered_hourly:
+            self._render_no_data(rect, no_data_for_day=True)
             return
 
         # Get visible slice based on scroll
         start_idx = self._scroll_offset
-        end_idx = min(start_idx + self._hours_to_show, len(all_hourly))
-        hourly = all_hourly[start_idx:end_idx]
+        end_idx = min(start_idx + self._hours_to_show, len(filtered_hourly))
+        hourly = filtered_hourly[start_idx:end_idx]
 
         if not hourly:
-            self._render_no_data(rect)
+            self._render_no_data(rect, no_data_for_day=True)
             return
+
+        # Store total hours for scroll calculations
+        total_hours = len(filtered_hourly)
 
         # Card background
         card_margin = 15
@@ -796,11 +835,21 @@ class HourlyForecastWidget:
         card_bg = self._darken_color(self.theme.background_rgb, 0.15)
         draw_rounded_rect(self.screen, card_bg, card_rect, 12)
 
-        # Title with scroll indicators
-        title = "24-Hour Forecast"
+        # Title with day name and scroll indicators if needed
+        # Get day name for title
+        tz_name = self.config.get('clock', {}).get('timezone', 'America/New_York')
+        try:
+            tz = pytz.timezone(tz_name)
+        except:
+            tz = pytz.UTC
+
+        day_dt = datetime.fromtimestamp(hourly[0]['dt'], tz)
+        day_name = day_dt.strftime('%A')
+        title = f"{day_name} Hourly"
+
         if start_idx > 0:
             title = "◀ " + title
-        if end_idx < len(all_hourly):
+        if end_idx < total_hours:
             title = title + " ▶"
         title_surface = self._label_font.render(title, True, self.theme.weather_value_color_rgb)
         self.screen.blit(title_surface, (card_rect.left + 15, card_rect.top + 6))
@@ -834,13 +883,6 @@ class HourlyForecastWidget:
             temp_label = temp_max - (temp_range * i / 4)
             label_surface = self._small_font.render(f"{temp_label:.0f}°", True, self.theme.graph_label_color_rgb)
             self.screen.blit(label_surface, (card_rect.left + 5, int(y) - 5))
-
-        # Get timezone
-        tz_name = self.config.get('clock', {}).get('timezone', 'America/New_York')
-        try:
-            tz = pytz.timezone(tz_name)
-        except:
-            tz = pytz.UTC
 
         # Calculate points for the temperature line
         hour_width = graph_width / len(hourly)
@@ -900,14 +942,17 @@ class HourlyForecastWidget:
             return hex_to_rgb(color)
         return self.theme.weather_value_color_rgb
 
-    def _render_no_data(self, rect: pygame.Rect):
+    def _render_no_data(self, rect: pygame.Rect, no_data_for_day: bool = False):
         """Render placeholder when no weather data."""
         card_margin = 15
         card_rect = pygame.Rect(rect.left + card_margin, rect.top + card_margin // 2, rect.width - card_margin * 2, rect.height - card_margin)
         card_bg = self._darken_color(self.theme.background_rgb, 0.15)
         draw_rounded_rect(self.screen, card_bg, card_rect, 12)
 
-        text = "Hourly forecast loading..."
+        if no_data_for_day:
+            text = "Hourly data not available for this day"
+        else:
+            text = "Hourly forecast loading..."
         surface = self._label_font.render(text, True, self.theme.weather_label_color_rgb)
         text_rect = surface.get_rect(center=card_rect.center)
         self.screen.blit(surface, text_rect)

@@ -310,9 +310,10 @@ class TablePiApp:
         back_surface = back_font.render(back_text, True, self.theme.clock_color_rgb)
         self.screen.blit(back_surface, (15, 10))
 
-        # Set the selected day on the daily detail widget
+        # Set the selected day on the daily detail and hourly widgets
         if self.selected_day is not None:
             self.daily_detail_widget.set_selected_day(self.selected_day)
+            self.hourly_widget.set_selected_day(self.selected_day)
 
         # Layout: Daily details on top half, hourly forecast on bottom half
         # Top section: Day detail (takes about 55% of height minus header)
