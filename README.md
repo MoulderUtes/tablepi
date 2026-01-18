@@ -25,7 +25,7 @@ A Raspberry Pi-powered tabletop display featuring a clock, weather information, 
 ## Quick Start
 
 1. Flash Raspberry Pi OS Lite (64-bit) to your SD card
-2. Clone this repository to `/home/pi/tablepi`
+2. Clone this repository to `/home/<USERNAME>/tablepi`
 3. Run `./install.sh`
 4. Access the web UI at `http://tablepi.local:5000`
 

@@ -162,9 +162,18 @@ class ClockWidget:
         )
 
     def _lighten_color(self, color, amount):
-        """Lighten a color by a percentage."""
-        return (
-            min(255, int(color[0] + (255 - color[0]) * amount)),
-            min(255, int(color[1] + (255 - color[1]) * amount)),
-            min(255, int(color[2] + (255 - color[2]) * amount))
-        )
+        """Lighten (positive amount) or darken (negative amount) a color."""
+        if amount >= 0:
+            return (
+                min(255, max(0, int(color[0] + (255 - color[0]) * amount))),
+                min(255, max(0, int(color[1] + (255 - color[1]) * amount))),
+                min(255, max(0, int(color[2] + (255 - color[2]) * amount)))
+            )
+        else:
+            # Negative amount means darken
+            factor = 1 + amount  # e.g., -0.3 becomes 0.7
+            return (
+                min(255, max(0, int(color[0] * factor))),
+                min(255, max(0, int(color[1] * factor))),
+                min(255, max(0, int(color[2] * factor)))
+            )

@@ -4,6 +4,7 @@ import os
 import sys
 import signal
 import socket
+import traceback
 from threading import Thread
 from queue import Empty
 
@@ -141,21 +142,39 @@ class TablePiApp:
 
             # Reload theme
             theme_name = config.get('theme', 'dark')
+            self.queues.log_info(f"Loading theme: {theme_name}")
             theme_data = load_theme(theme_name)
             if theme_data:
+                self.queues.log_info(f"Theme data loaded, creating Theme object")
                 self.theme = Theme(theme_data)
                 self.state.set_theme(theme_data)
+                self.queues.log_info(f"Theme object created successfully")
 
-            # Update widgets
+            # Update widgets one by one with logging
+            self.queues.log_info("Updating clock widget theme")
             self.clock_widget.update_theme(self.theme)
             self.clock_widget.update_config(config)
+
+            self.queues.log_info("Updating weather widget theme")
             self.weather_widget.update_theme(self.theme)
             self.weather_widget.update_config(config)
+
+            self.queues.log_info("Updating forecast widget theme")
             self.forecast_widget.update_theme(self.theme)
             self.forecast_widget.update_config(config)
+
+            self.queues.log_info("Updating status bar theme")
             self.status_bar.update_theme(self.theme)
+
+            self.queues.log_info("Config reload complete")
         except Exception as e:
+            # Log full traceback for debugging
+            tb = traceback.format_exc()
             self.queues.log_error(f"Error reloading config: {e}")
+            self.queues.log_error(f"Traceback:\n{tb}")
+            # Also print to console for immediate visibility
+            print(f"ERROR reloading config: {e}", file=sys.stderr)
+            print(tb, file=sys.stderr)
 
     def _update_weather(self, data: dict):
         """Update weather data on widgets."""
