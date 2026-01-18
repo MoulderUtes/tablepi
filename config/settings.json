@@ -6,8 +6,9 @@
     "fps": 30
   },
   "clock": {
-    "timezone": "America/Denver",
-    "format_24h": false
+    "format_24h": false,
+    "show_seconds": true,
+    "timezone": "America/Denver"
   },
   "weather": {
     "api_key": "xxxxx",
@@ -16,12 +17,13 @@
     "units": "imperial",
     "update_interval_minutes": 5
   },
-  "theme": "default",
+  "theme": "neon",
   "audio": {
     "output_device": "default",
     "volume": 80
   },
   "bluetooth": {
+    "speaker_mac": "",
     "auto_connect": true
   },
   "web": {

@@ -31,10 +31,12 @@ class ClockWidget:
         try:
             # Use a clean monospace font for the time
             self._time_font = pygame.font.SysFont('DejaVu Sans Mono', font_size)
-            self._date_font = pygame.font.SysFont('DejaVu Sans', 16)
+            self._date_font = pygame.font.SysFont('DejaVu Sans', 28)  # Bigger date font
+            self._ampm_font = pygame.font.SysFont('DejaVu Sans', 18)  # Separate smaller font for AM/PM
         except:
             self._time_font = pygame.font.Font(None, font_size)
-            self._date_font = pygame.font.Font(None, 16)
+            self._date_font = pygame.font.Font(None, 28)
+            self._ampm_font = pygame.font.Font(None, 18)
 
     def update_theme(self, theme: Theme):
         """Update the theme and reinitialize font if needed."""
@@ -90,18 +92,8 @@ class ClockWidget:
         """
         time_str, ampm, date_str = self.get_current_time()
 
-        # Create a subtle card background for the clock area
-        card_margin = 15
-        card_padding_top = 12
-        card_padding_bottom = 10
-        card_rect = pygame.Rect(
-            rect.left + card_margin,
-            rect.top + card_padding_top,
-            rect.width - card_margin * 2,
-            rect.height - card_padding_top - card_padding_bottom
-        )
-        card_bg = self._darken_color(self.theme.background_rgb, 0.1)
-        draw_rounded_rect(self.screen, card_bg, card_rect, 12)
+        # Top padding from screen edge
+        top_padding = 15
 
         # Render the time text
         time_surface = self._time_font.render(
@@ -110,46 +102,50 @@ class ClockWidget:
             self.theme.clock_color_rgb
         )
 
-        # Calculate centered position
-        total_width = time_surface.get_width()
-
         # Add AM/PM if present
         ampm_surface = None
         if ampm:
-            ampm_surface = self._date_font.render(
+            ampm_surface = self._ampm_font.render(
                 ampm,
                 True,
                 self._lighten_color(self.theme.clock_color_rgb, -0.3)
             )
-            total_width += ampm_surface.get_width() + 8
 
-        # Center everything vertically with space for date below
+        # Render date
         date_surface = self._date_font.render(
             date_str,
             True,
             self.theme.weather_label_color_rgb
         )
-        total_height = time_surface.get_height() + date_surface.get_height() + 8
-        start_y = card_rect.centery - total_height // 2
 
-        start_x = card_rect.centerx - total_width // 2
-        time_y = start_y
+        # Calculate total width: time + AM/PM + gap + date
+        gap_between = 20  # Gap between time/ampm and date
+        ampm_width = ampm_surface.get_width() + 8 if ampm_surface else 0
+        total_width = time_surface.get_width() + ampm_width + gap_between + date_surface.get_width()
+
+        # Center everything horizontally
+        start_x = rect.centerx - total_width // 2
+
+        # Position time at top with padding
+        time_y = rect.top + top_padding
 
         # Draw time
         self.screen.blit(time_surface, (start_x, time_y))
 
-        # Draw AM/PM next to time
+        # Track current x position
+        current_x = start_x + time_surface.get_width()
+
+        # Draw AM/PM next to time (aligned to bottom of time)
         if ampm_surface:
-            ampm_x = start_x + time_surface.get_width() + 8
+            ampm_x = current_x + 8
             ampm_y = time_y + time_surface.get_height() - ampm_surface.get_height() - 5
             self.screen.blit(ampm_surface, (ampm_x, ampm_y))
+            current_x = ampm_x + ampm_surface.get_width()
 
-        # Render the date below the time with padding
-        date_rect = date_surface.get_rect(
-            centerx=card_rect.centerx,
-            top=time_y + time_surface.get_height() + 8
-        )
-        self.screen.blit(date_surface, date_rect)
+        # Draw date to the right, vertically centered with time
+        date_x = current_x + gap_between
+        date_y = time_y + (time_surface.get_height() - date_surface.get_height()) // 2
+        self.screen.blit(date_surface, (date_x, date_y))
 
         self._last_time_str = time_str
 

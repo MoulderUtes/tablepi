@@ -19,7 +19,10 @@ from app.services.config import (
 )
 from app.display.themes import Theme
 from app.display.clock import ClockWidget
-from app.display.weather import WeatherWidget, ForecastGraphWidget, StatusBarWidget
+from app.display.weather import (
+    WeatherWidget, ForecastGraphWidget, StatusBarWidget,
+    HourlyForecastWidget, DailyDetailWidget
+)
 
 
 class TablePiApp:
@@ -37,6 +40,8 @@ class TablePiApp:
         self.clock_widget = None
         self.weather_widget = None
         self.forecast_widget = None
+        self.hourly_widget = None
+        self.daily_detail_widget = None
         self.status_bar = None
 
         # Current theme
@@ -84,6 +89,8 @@ class TablePiApp:
         self.clock_widget = ClockWidget(self.screen, self.theme, config)
         self.weather_widget = WeatherWidget(self.screen, self.theme, config)
         self.forecast_widget = ForecastGraphWidget(self.screen, self.theme, config)
+        self.hourly_widget = HourlyForecastWidget(self.screen, self.theme, config)
+        self.daily_detail_widget = DailyDetailWidget(self.screen, self.theme, config)
         self.status_bar = StatusBarWidget(self.screen, self.theme)
 
         # Get initial IP address
@@ -163,6 +170,14 @@ class TablePiApp:
             self.forecast_widget.update_theme(self.theme)
             self.forecast_widget.update_config(config)
 
+            self.queues.log_info("Updating hourly widget theme")
+            self.hourly_widget.update_theme(self.theme)
+            self.hourly_widget.update_config(config)
+
+            self.queues.log_info("Updating daily detail widget theme")
+            self.daily_detail_widget.update_theme(self.theme)
+            self.daily_detail_widget.update_config(config)
+
             self.queues.log_info("Updating status bar theme")
             self.status_bar.update_theme(self.theme)
 
@@ -180,6 +195,8 @@ class TablePiApp:
         """Update weather data on widgets."""
         self.weather_widget.set_weather_data(data)
         self.forecast_widget.set_weather_data(data)
+        self.hourly_widget.set_weather_data(data)
+        self.daily_detail_widget.set_weather_data(data)
 
         # Update last fetch time on status bar
         _, last_fetch = self.state.get_weather()
@@ -224,8 +241,8 @@ class TablePiApp:
         height = display_config.get('height', 480)
 
         if self.current_view == 'main':
-            # Check if touch is on forecast graph
-            graph_rect = pygame.Rect(0, 250, width, 200)
+            # Check if touch is on forecast graph (matches layout in _render_main_view)
+            graph_rect = pygame.Rect(0, 200, width, height - 230)
             day_idx = self.forecast_widget.handle_touch(pos, graph_rect)
             if day_idx is not None:
                 self.selected_day = day_idx
@@ -238,6 +255,16 @@ class TablePiApp:
             if back_rect.collidepoint(pos):
                 self.current_view = 'main'
                 self.selected_day = None
+                self.hourly_widget._scroll_offset = 0  # Reset scroll
+                return
+
+            # Check for scroll areas in hourly widget (left and right edges)
+            # Left scroll area
+            if pos[0] < 50 and pos[1] > height // 2:
+                self.hourly_widget.scroll(-12)  # Scroll left by 12 hours
+            # Right scroll area
+            elif pos[0] > width - 50 and pos[1] > height // 2:
+                self.hourly_widget.scroll(12)  # Scroll right by 12 hours
 
     def _render(self):
         """Render the display."""
@@ -258,9 +285,10 @@ class TablePiApp:
 
     def _render_main_view(self, width: int, height: int):
         """Render the main view with clock, weather, and graph."""
-        # Layout regions
-        clock_rect = pygame.Rect(0, 0, width, 80)
-        weather_rect = pygame.Rect(0, 80, width, 120)
+        # Layout regions - adjusted for better spacing
+        # Clock: time + date side by side, ~90px with top padding
+        clock_rect = pygame.Rect(0, 0, width, 90)
+        weather_rect = pygame.Rect(0, 90, width, 110)
         graph_rect = pygame.Rect(0, 200, width, height - 230)
         status_rect = pygame.Rect(0, height - 30, width, 30)
 
@@ -275,20 +303,37 @@ class TablePiApp:
         self.status_bar.render(status_rect)
 
     def _render_hourly_view(self, width: int, height: int):
-        """Render the hourly detail view."""
-        # Draw back button
-        back_font = pygame.font.SysFont('DejaVu Sans', 24)
+        """Render the hourly detail view with daily details and hourly forecast."""
+        # Back button area
+        back_font = pygame.font.SysFont('DejaVu Sans', 20)
         back_text = "← Back"
         back_surface = back_font.render(back_text, True, self.theme.clock_color_rgb)
-        self.screen.blit(back_surface, (10, 10))
+        self.screen.blit(back_surface, (15, 10))
 
-        # TODO: Implement full hourly view
-        # For now, show placeholder
-        placeholder_font = pygame.font.SysFont('DejaVu Sans', 20)
-        text = f"Hourly view for day {self.selected_day} (Coming soon)"
-        surface = placeholder_font.render(text, True, self.theme.weather_value_color_rgb)
-        rect = surface.get_rect(center=(width // 2, height // 2))
-        self.screen.blit(surface, rect)
+        # Set the selected day on the daily detail widget
+        if self.selected_day is not None:
+            self.daily_detail_widget.set_selected_day(self.selected_day)
+
+        # Layout: Daily details on top half, hourly forecast on bottom half
+        # Top section: Day detail (takes about 55% of height minus header)
+        header_height = 40
+        detail_height = int((height - header_height) * 0.55)
+        hourly_height = height - header_height - detail_height - 30  # 30px for status bar
+
+        detail_rect = pygame.Rect(0, header_height, width, detail_height)
+        hourly_rect = pygame.Rect(0, header_height + detail_height, width, hourly_height)
+        status_rect = pygame.Rect(0, height - 30, width, 30)
+
+        # Render daily detail
+        self.daily_detail_widget.render(detail_rect)
+
+        # Render hourly forecast
+        self.hourly_widget.render(hourly_rect)
+
+        # Status bar
+        _, last_fetch = self.state.get_weather()
+        self.status_bar.set_last_update(last_fetch)
+        self.status_bar.render(status_rect)
 
     def run(self):
         """Main application loop."""

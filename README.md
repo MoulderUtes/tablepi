@@ -47,6 +47,16 @@ See [PI_SETUP.md](PI_SETUP.md) for detailed Raspberry Pi setup instructions.
 
 ## Changelog
 
+### v0.1.1
+- **Hourly Forecast Widget** - View 48-hour forecast with scrollable display showing time, icon, temp, precipitation, and wind
+- **Daily Detail Widget** - Tap any day on the 7-day graph to see detailed breakdown including morning/day/evening/night temps, humidity, wind, precipitation, UV index, and sunrise/sunset times
+- **Version Display** - Status bar now shows "TablePi v0.1.1" instead of IP address (web URL still shown in center)
+- **Improved Clock Layout** - Date now displays beside the time with larger font, AM/PM indicator properly positioned
+- **Weather Card Redesign** - New 2-row layout: temp and feels-like on top, icon centered under temp with description
+- **Input Validation** - Comprehensive server-side validation for all web UI inputs (settings, themes, MAC addresses, coordinates, etc.)
+- **Theme Change Fix** - Fixed crash when switching themes due to invalid color values in `_lighten_color`
+- **Install Script Improvements** - Better error logging, exits to TTY on crash for debugging
+
 ### v0.1.0 (Initial Release)
 - Clock display with configurable 12/24h format and timezone
 - Weather widget with current conditions display
@@ -61,7 +71,6 @@ See [PI_SETUP.md](PI_SETUP.md) for detailed Raspberry Pi setup instructions.
 
 ### Planned
 - Full YouTube playback via mpv
-- Hourly forecast detail view
 - Bluetooth device scanning and pairing
 - Audio device enumeration and switching
 
