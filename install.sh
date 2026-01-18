@@ -122,11 +122,18 @@ else
     echo "  Warning: raspi-config not found. You'll need to configure auto-login, SSH, and filesystem expansion manually."
 fi
 
-# Create .xinitrc
+# Create .xinitrc with error logging (exits to TTY on crash for debugging)
 echo "  Creating ~/.xinitrc..."
 cat << 'EOF' > "$HOME_DIR/.xinitrc"
 #!/bin/bash
 # TablePi X startup script
+
+# Log file for debugging
+LOGFILE=~/tablepi/logs/startup.log
+mkdir -p ~/tablepi/logs
+
+echo "=== TablePi starting at $(date) ===" >> "$LOGFILE"
+
 # Disable screen saver and power management
 xset s off
 xset -dpms
@@ -138,7 +145,13 @@ openbox-session &
 # Launch TablePi
 cd ~/tablepi
 source venv/bin/activate
-python3 app/main.py
+
+echo "Starting TablePi at $(date)" >> "$LOGFILE"
+python3 app/main.py 2>&1 | tee -a "$LOGFILE"
+EXIT_CODE=$?
+echo "TablePi exited with code $EXIT_CODE at $(date)" >> "$LOGFILE"
+
+# Exit to TTY for debugging - check ~/tablepi/logs/startup.log for errors
 EOF
 chmod +x "$HOME_DIR/.xinitrc"
 

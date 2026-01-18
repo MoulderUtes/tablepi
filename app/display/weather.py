@@ -39,15 +39,16 @@ class WeatherWidget:
         try:
             self._label_font = pygame.font.SysFont('DejaVu Sans', 14)
             self._value_font = pygame.font.SysFont('DejaVu Sans', 18)
-            self._large_font = pygame.font.SysFont('DejaVu Sans', 48)
+            self._large_font = pygame.font.SysFont('DejaVu Sans', 38)
             self._small_font = pygame.font.SysFont('DejaVu Sans', 12)
-            self._icon_font = pygame.font.SysFont('Segoe UI Emoji', 32)
+            # Use DejaVu Sans for icons - it has good Unicode coverage
+            self._icon_font = pygame.font.SysFont('DejaVu Sans', 28)
         except:
             self._label_font = pygame.font.Font(None, 14)
             self._value_font = pygame.font.Font(None, 18)
-            self._large_font = pygame.font.Font(None, 48)
+            self._large_font = pygame.font.Font(None, 38)
             self._small_font = pygame.font.Font(None, 12)
-            self._icon_font = pygame.font.Font(None, 32)
+            self._icon_font = pygame.font.Font(None, 28)
 
     def update_theme(self, theme: Theme):
         """Update the theme."""
@@ -211,9 +212,9 @@ class WeatherWidget:
             precip_label = "Precip"
 
         stats = [
-            ("💧", f"{humidity:.0f}%", "Humidity", self._get_color(get_humidity_color, humidity)),
-            ("💨", f"{wind:.0f}{speed_unit}", self._wind_direction(wind_deg), self._get_color(get_wind_color, wind)),
-            ("🌧", f"{rain_chance:.0f}%", precip_label, self._get_color(get_precipitation_color, rain_chance)),
+            ("≋", f"{humidity:.0f}%", "Humidity", self._get_color(get_humidity_color, humidity)),
+            ("»", f"{wind:.0f}{speed_unit}", self._wind_direction(wind_deg), self._get_color(get_wind_color, wind)),
+            ("☔", f"{rain_chance:.0f}%", precip_label, self._get_color(get_precipitation_color, rain_chance)),
             ("☀", f"UV {uvi:.0f}", "Index", self._get_uv_display_color(uvi)),
         ]
 

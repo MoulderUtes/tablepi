@@ -37,8 +37,9 @@ The install script handles everything automatically:
 
 ```bash
 # Clone the repository
+sudo apt install -y git
 cd ~
-git clone <your-repo-url> tablepi
+git clone https://github.com/MoulderUtes/tablepi.git tablepi
 cd tablepi
 
 # Run the installer

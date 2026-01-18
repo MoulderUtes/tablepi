@@ -158,7 +158,8 @@ def get_humidity_color(percent: float) -> Tuple[str, str]:
 
 def get_moon_phase_icon(phase: float) -> Tuple[str, str]:
     """
-    Get emoji and name for moon phase.
+    Get symbol and name for moon phase.
+    Uses simple Unicode characters that render reliably.
 
     Phase is 0-1 from OpenWeatherMap:
     - 0 or 1: New Moon
@@ -166,50 +167,51 @@ def get_moon_phase_icon(phase: float) -> Tuple[str, str]:
     - 0.5: Full Moon
     - 0.75: Last Quarter
 
-    Returns: (emoji, name)
+    Returns: (symbol, name)
     """
     if phase == 0 or phase == 1:
-        return "🌑", "New Moon"
+        return "●", "New Moon"
     elif phase < 0.25:
-        return "🌒", "Waxing Crescent"
+        return "◐", "Waxing Cres"
     elif phase == 0.25:
-        return "🌓", "First Quarter"
+        return "◑", "First Qtr"
     elif phase < 0.5:
-        return "🌔", "Waxing Gibbous"
+        return "◕", "Waxing Gib"
     elif phase == 0.5:
-        return "🌕", "Full Moon"
+        return "○", "Full Moon"
     elif phase < 0.75:
-        return "🌖", "Waning Gibbous"
+        return "◔", "Waning Gib"
     elif phase == 0.75:
-        return "🌗", "Last Quarter"
+        return "◑", "Last Qtr"
     else:
-        return "🌘", "Waning Crescent"
+        return "◐", "Waning Cres"
 
 
 def get_weather_icon(icon_code: str) -> str:
     """
-    Get emoji for OpenWeatherMap icon code.
+    Get symbol for OpenWeatherMap icon code.
+    Uses simple Unicode characters that render reliably across fonts.
 
     Codes: https://openweathermap.org/weather-conditions
     """
     icon_map = {
-        '01d': '☀️',   # Clear day
-        '01n': '🌙',   # Clear night
+        '01d': '☀',    # Clear day (sun)
+        '01n': '☽',    # Clear night (crescent moon)
         '02d': '⛅',   # Few clouds day
-        '02n': '☁️',   # Few clouds night
-        '03d': '☁️',   # Scattered clouds
-        '03n': '☁️',
-        '04d': '☁️',   # Broken clouds
-        '04n': '☁️',
-        '09d': '🌧️',  # Shower rain
-        '09n': '🌧️',
-        '10d': '🌧️',  # Rain
-        '10n': '🌧️',
-        '11d': '⛈️',  # Thunderstorm
-        '11n': '⛈️',
-        '13d': '❄️',   # Snow
-        '13n': '❄️',
-        '50d': '🌫️',  # Mist
-        '50n': '🌫️',
+        '02n': '☁',    # Few clouds night
+        '03d': '☁',    # Scattered clouds
+        '03n': '☁',
+        '04d': '☁',    # Broken clouds
+        '04n': '☁',
+        '09d': '☔',   # Shower rain
+        '09n': '☔',
+        '10d': '☔',   # Rain
+        '10n': '☔',
+        '11d': '⚡',   # Thunderstorm
+        '11n': '⚡',
+        '13d': '❄',    # Snow
+        '13n': '❄',
+        '50d': '≋',    # Mist (wavy lines)
+        '50n': '≋',
     }
-    return icon_map.get(icon_code, '🌡️')
+    return icon_map.get(icon_code, '☀')

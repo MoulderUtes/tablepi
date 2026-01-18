@@ -92,11 +92,13 @@ class ClockWidget:
 
         # Create a subtle card background for the clock area
         card_margin = 15
+        card_padding_top = 12
+        card_padding_bottom = 10
         card_rect = pygame.Rect(
             rect.left + card_margin,
-            rect.top + 8,
+            rect.top + card_padding_top,
             rect.width - card_margin * 2,
-            rect.height - 12
+            rect.height - card_padding_top - card_padding_bottom
         )
         card_bg = self._darken_color(self.theme.background_rgb, 0.1)
         draw_rounded_rect(self.screen, card_bg, card_rect, 12)
@@ -121,9 +123,17 @@ class ClockWidget:
             )
             total_width += ampm_surface.get_width() + 8
 
-        # Center everything
+        # Center everything vertically with space for date below
+        date_surface = self._date_font.render(
+            date_str,
+            True,
+            self.theme.weather_label_color_rgb
+        )
+        total_height = time_surface.get_height() + date_surface.get_height() + 8
+        start_y = card_rect.centery - total_height // 2
+
         start_x = card_rect.centerx - total_width // 2
-        time_y = card_rect.centery - time_surface.get_height() // 2 - 5
+        time_y = start_y
 
         # Draw time
         self.screen.blit(time_surface, (start_x, time_y))
@@ -134,15 +144,10 @@ class ClockWidget:
             ampm_y = time_y + time_surface.get_height() - ampm_surface.get_height() - 5
             self.screen.blit(ampm_surface, (ampm_x, ampm_y))
 
-        # Render the date below the time
-        date_surface = self._date_font.render(
-            date_str,
-            True,
-            self.theme.weather_label_color_rgb  # Use a muted color
-        )
+        # Render the date below the time with padding
         date_rect = date_surface.get_rect(
             centerx=card_rect.centerx,
-            top=time_y + time_surface.get_height() + 2
+            top=time_y + time_surface.get_height() + 8
         )
         self.screen.blit(date_surface, date_rect)
 

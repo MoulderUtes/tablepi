@@ -135,23 +135,27 @@ class TablePiApp:
 
     def _reload_config(self):
         """Reload configuration and theme."""
-        config = load_config()
-        self.state.set_config(config)
+        try:
+            config = load_config()
+            self.state.set_config(config)
 
-        # Reload theme
-        theme_name = config.get('theme', 'dark')
-        theme_data = load_theme(theme_name)
-        self.theme = Theme(theme_data)
-        self.state.set_theme(theme_data)
+            # Reload theme
+            theme_name = config.get('theme', 'dark')
+            theme_data = load_theme(theme_name)
+            if theme_data:
+                self.theme = Theme(theme_data)
+                self.state.set_theme(theme_data)
 
-        # Update widgets
-        self.clock_widget.update_theme(self.theme)
-        self.clock_widget.update_config(config)
-        self.weather_widget.update_theme(self.theme)
-        self.weather_widget.update_config(config)
-        self.forecast_widget.update_theme(self.theme)
-        self.forecast_widget.update_config(config)
-        self.status_bar.update_theme(self.theme)
+            # Update widgets
+            self.clock_widget.update_theme(self.theme)
+            self.clock_widget.update_config(config)
+            self.weather_widget.update_theme(self.theme)
+            self.weather_widget.update_config(config)
+            self.forecast_widget.update_theme(self.theme)
+            self.forecast_widget.update_config(config)
+            self.status_bar.update_theme(self.theme)
+        except Exception as e:
+            self.queues.log_error(f"Error reloading config: {e}")
 
     def _update_weather(self, data: dict):
         """Update weather data on widgets."""
