@@ -10,23 +10,87 @@ This guide covers setting up a Raspberry Pi 3B with the official 7" touchscreen 
 - Power supply (2.5A recommended)
 - Optional: Bluetooth speaker
 
-## Step 1: Install Raspberry Pi OS Lite
+## Step 1: Flash Raspberry Pi OS
 
 1. Download [Raspberry Pi Imager](https://www.raspberrypi.com/software/)
 2. Flash **Raspberry Pi OS Lite (64-bit)** to SD card
 3. In imager settings (gear icon):
    - Enable SSH
-   - Set username/password (remember this username for later steps)
+   - Set username/password (remember this for later)
    - Configure WiFi
    - Set hostname: `tablepi`
 
-## Step 2: Initial Boot & Updates
+## Step 2: Initial Boot
 
 ```bash
 # SSH into the Pi (replace YOUR_USERNAME with what you set in imager)
 ssh YOUR_USERNAME@tablepi.local
+```
 
-# Update system
+---
+
+# Choose Your Installation Method
+
+## Option 1: Automated Installation (Recommended)
+
+The install script handles everything automatically:
+
+```bash
+# Clone the repository
+cd ~
+git clone <your-repo-url> tablepi
+cd tablepi
+
+# Run the installer
+./install.sh
+```
+
+The script will:
+- Update system packages
+- Install X11, Python, audio, and Bluetooth packages
+- Create Python virtual environment and install dependencies
+- Expand filesystem to use full SD card
+- Enable console auto-login
+- Enable SSH
+- Configure auto-start on boot (.xinitrc and .bash_profile)
+- Enable Bluetooth and PulseAudio services
+
+After the script completes:
+
+```bash
+# Edit the config to add your API key and location
+nano config/settings.json
+```
+
+Required config changes:
+- `weather.api_key` - Your OpenWeatherMap API key (get one at https://openweathermap.org/api)
+- `weather.lat` - Your latitude (e.g., 40.7128)
+- `weather.lon` - Your longitude (e.g., -74.0060)
+- `clock.timezone` - Your timezone (e.g., "America/New_York")
+
+Optional:
+```bash
+# Set your timezone
+sudo raspi-config
+# → Localisation Options → Timezone → Select yours
+```
+
+Then reboot:
+```bash
+sudo reboot
+```
+
+**That's it!** TablePi will start automatically after reboot.
+
+---
+
+## Option 2: Manual Installation
+
+If you prefer to install manually or need to troubleshoot, follow these steps.
+
+### 2a: Update System
+
+```bash
 sudo apt update && sudo apt upgrade -y
 
 # Set timezone
@@ -34,7 +98,7 @@ sudo raspi-config
 # → Localisation Options → Timezone → Select yours
 ```
 
-## Step 3: Install X11 and Display Dependencies
+### 2b: Install X11 and Display Dependencies
 
 We use X11 without a full desktop environment - just enough to run PyGame:
 
@@ -47,21 +111,21 @@ sudo apt install -y python3 python3-pip python3-venv python3-pygame
 
 # Install mpv and yt-dlp for YouTube
 sudo apt install -y mpv
-pip3 install yt-dlp
 
 # Install fonts (for emoji and text rendering)
 sudo apt install -y fonts-dejavu fonts-liberation fonts-noto-color-emoji
 
 # Install audio tools
 sudo apt install -y pulseaudio pulseaudio-utils alsa-utils
+
+# Install Bluetooth tools
+sudo apt install -y bluez pulseaudio-module-bluetooth
 ```
 
-## Step 4: Install TablePi Application
-
-**Important:** Install TablePi BEFORE configuring auto-start (Step 5), since the auto-start scripts reference the virtual environment.
+### 2c: Install TablePi Application
 
 ```bash
-# Clone repository (or copy files)
+# Clone repository
 cd ~
 git clone <your-repo-url> tablepi
 cd tablepi
@@ -70,8 +134,13 @@ cd tablepi
 python3 -m venv venv
 source venv/bin/activate
 
-# Install dependencies
+# Install Python dependencies
+pip install --upgrade pip
 pip install -r requirements.txt
+pip install yt-dlp
+
+# Create directories
+mkdir -p cache logs
 
 # Copy default config
 cp config/settings.example.json config/settings.json
@@ -80,24 +149,31 @@ cp config/settings.example.json config/settings.json
 nano config/settings.json
 ```
 
-## Step 5: Configure Auto-Start on Boot
+### 2d: Configure System Settings
 
-This is the recommended method for running TablePi. The flow is:
+```bash
+# Expand filesystem, enable auto-login, and enable SSH
+sudo raspi-config nonint do_expand_rootfs
+sudo raspi-config nonint do_boot_behaviour B2
+sudo raspi-config nonint do_ssh 0
+
+# Add user to bluetooth group
+sudo usermod -aG bluetooth $(whoami)
+
+# Enable services
+sudo systemctl enable bluetooth
+sudo systemctl start bluetooth
+systemctl --user enable pulseaudio
+```
+
+### 2e: Configure Auto-Start on Boot
+
+This is how TablePi starts automatically:
 1. Pi boots → auto-login to console
 2. `.bash_profile` runs → starts X11
 3. `.xinitrc` runs → launches TablePi
 
-### 5a: Enable Console Auto-Login
-
-```bash
-sudo raspi-config
-# Navigate to: System Options → Boot / Auto Login → Console Autologin
-# Select it and exit raspi-config
-```
-
-### 5b: Create the X Startup Script (.xinitrc)
-
-This script runs when X11 starts. It disables screen blanking and launches TablePi:
+**Create the X startup script (.xinitrc):**
 
 ```bash
 cat << 'EOF' > ~/.xinitrc
@@ -116,25 +192,21 @@ source venv/bin/activate
 python3 app/main.py
 EOF
 
-# Make it executable
 chmod +x ~/.xinitrc
 ```
 
-### 5c: Auto-Start X11 on Login (.bash_profile)
-
-This line starts X automatically when you log in to the console (but not via SSH):
+**Configure auto-start X11 on login (.bash_profile):**
 
 ```bash
-# Create or append to .bash_profile
 echo '[[ -z $DISPLAY && $XDG_VTNR -eq 1 ]] && startx' >> ~/.bash_profile
 ```
 
-**What this does:**
+What this does:
 - `[[ -z $DISPLAY ]]` - Only run if no display is set (not already in X)
 - `$XDG_VTNR -eq 1` - Only run on virtual terminal 1 (the main console, not SSH)
 - `startx` - Starts X11, which then runs `.xinitrc`
 
-### 5d: Reboot and Test
+### 2f: Reboot and Test
 
 ```bash
 sudo reboot
@@ -145,9 +217,11 @@ After reboot, the Pi should:
 2. Automatically start X11
 3. Launch TablePi on the display
 
-**Note:** If you SSH in, X won't start (that's by design). The display will only run when booted normally.
+**Note:** If you SSH in, X won't start (that's by design). The display only runs when booted normally.
 
-## Step 6: Configure Display (if needed)
+---
+
+## Display Configuration (if needed)
 
 ```bash
 # Edit boot config
@@ -161,7 +235,7 @@ lcd_rotate=2
 display_rotate=0
 ```
 
-## Step 7: Configure Touchscreen
+## Touchscreen Configuration
 
 The official 7" display should work out of the box. If touch is inverted:
 
@@ -173,9 +247,23 @@ lcd_rotate=2
 # dtoverlay=rpi-ft5406,touchscreen-inverted-x=1,touchscreen-swapped-x-y=1
 ```
 
-## Step 8: Systemd Service (Alternative Method)
+## Bluetooth Audio Setup
 
-**Note:** This is an alternative to Step 5. Only use this if you want TablePi to run as a system service. This requires X11 to already be running (e.g., via the auto-start method above, or a display manager).
+```bash
+# Pair a Bluetooth speaker (first time)
+bluetoothctl
+# power on
+# agent on
+# scan on
+# pair XX:XX:XX:XX:XX:XX
+# connect XX:XX:XX:XX:XX:XX
+# trust XX:XX:XX:XX:XX:XX
+# quit
+```
+
+## Systemd Service (Alternative Method)
+
+**Note:** This is an alternative to the auto-start method. Only use this if you want TablePi to run as a system service. This requires X11 to already be running.
 
 ```bash
 # Get your username
@@ -184,7 +272,7 @@ whoami
 sudo nano /etc/systemd/system/tablepi.service
 ```
 
-Add (replace `YOUR_USERNAME` with your actual username from `whoami`):
+Add (replace `YOUR_USERNAME` with your actual username):
 
 ```ini
 [Unit]
@@ -207,7 +295,6 @@ WantedBy=multi-user.target
 ```
 
 ```bash
-# Reload systemd, enable and start
 sudo systemctl daemon-reload
 sudo systemctl enable tablepi
 sudo systemctl start tablepi
@@ -219,46 +306,11 @@ sudo systemctl status tablepi
 journalctl -u tablepi -f
 ```
 
-## Step 9: Configure Bluetooth Audio
-
-```bash
-# Install bluetooth tools
-sudo apt install -y bluez pulseaudio-module-bluetooth
-
-# Add your user to bluetooth group (replace YOUR_USERNAME)
-sudo usermod -aG bluetooth YOUR_USERNAME
-
-# Enable bluetooth service
-sudo systemctl enable bluetooth
-sudo systemctl start bluetooth
-
-# Pair manually (first time)
-bluetoothctl
-# power on
-# agent on
-# scan on
-# pair XX:XX:XX:XX:XX:XX
-# connect XX:XX:XX:XX:XX:XX
-# trust XX:XX:XX:XX:XX:XX
-# quit
-```
-
-## Step 10: Configure PulseAudio
-
-```bash
-# Ensure PulseAudio starts on login
-systemctl --user enable pulseaudio
-
-# List available audio sinks
-pactl list short sinks
-
-# Test audio
-speaker-test -c 2
-```
+---
 
 ## Running TablePi
 
-After setup, TablePi will start automatically on boot. You can also run it manually:
+After setup, TablePi starts automatically on boot. You can also run it manually:
 
 ```bash
 # If on the Pi console (not SSH), start X and TablePi
@@ -278,6 +330,8 @@ or
 ```
 http://<pi-ip-address>:5000
 ```
+
+---
 
 ## Troubleshooting
 
@@ -366,3 +420,13 @@ cd ~/tablepi
 source venv/bin/activate
 pip install -r requirements.txt
 ```
+
+### Weather not updating
+
+1. Check your API key is correct in `config/settings.json`
+2. Verify lat/lon coordinates are correct
+3. Check the web UI Activity Log for API errors
+4. Test API manually:
+   ```bash
+   curl "https://api.openweathermap.org/data/3.0/onecall?lat=YOUR_LAT&lon=YOUR_LON&appid=YOUR_API_KEY"
+   ```

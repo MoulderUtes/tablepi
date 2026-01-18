@@ -6,15 +6,15 @@
     "fps": 30
   },
   "clock": {
-    "timezone": "America/Denver",
+    "timezone": "America/New_York",
     "format_24h": false
   },
   "weather": {
-    "api_key": "xxxxx",
-    "lat": 40.2335,
-    "lon": -111.667,
+    "api_key": "YOUR_OPENWEATHERMAP_API_KEY",
+    "lat": 40.7128,
+    "lon": -74.0060,
     "units": "imperial",
-    "update_interval_minutes": 5
+    "update_interval_minutes": 30
   },
   "theme": "default",
   "audio": {
