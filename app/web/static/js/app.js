@@ -12,11 +12,15 @@ document.addEventListener('DOMContentLoaded', () => {
     loadLogs();
     loadWeatherStatus();
     loadAudioDevices();
+    loadBluetoothStatus();
     loadDimmingSettings();
     initEventListeners();
 
     // Periodically update weather status
     setInterval(loadWeatherStatus, 30000);
+
+    // Periodically update Bluetooth status
+    setInterval(loadBluetoothStatus, 10000);
 });
 
 // Sidebar Navigation
@@ -512,6 +516,70 @@ async function setVolume(value) {
 }
 
 // Bluetooth
+async function loadBluetoothStatus() {
+    try {
+        const response = await fetch('/api/bluetooth/status');
+        const status = await response.json();
+
+        document.getElementById('bt-status').textContent = status.connected ? 'Connected' : 'Disconnected';
+        document.getElementById('bt-device').textContent = status.device_name || 'None';
+
+        // Update status card styling
+        const statusCard = document.querySelector('#bluetooth .status-card');
+        if (statusCard) {
+            statusCard.classList.remove('status-connected', 'status-disconnected');
+            statusCard.classList.add(status.connected ? 'status-connected' : 'status-disconnected');
+        }
+    } catch (error) {
+        console.error('Failed to load Bluetooth status:', error);
+    }
+}
+
+async function loadBluetoothDevices() {
+    try {
+        const response = await fetch('/api/bluetooth/devices');
+        const data = await response.json();
+
+        const container = document.getElementById('bt-devices');
+
+        if (!data.devices || data.devices.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-bluetooth"></i>
+                    <p>No devices found. Click "Scan for Devices" to search.</p>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = '';
+        data.devices.forEach(device => {
+            const item = document.createElement('div');
+            item.className = 'device-item';
+
+            const statusIcon = device.connected ? 'fa-link' : (device.paired ? 'fa-check' : 'fa-bluetooth');
+            const statusText = device.connected ? 'Connected' : (device.paired ? 'Paired' : 'Available');
+
+            item.innerHTML = `
+                <div class="device-info">
+                    <i class="fas ${statusIcon}"></i>
+                    <div>
+                        <span class="device-name">${device.name}</span>
+                        <span class="device-mac">${device.mac}</span>
+                    </div>
+                </div>
+                <div class="device-status">${statusText}</div>
+                <button class="btn btn-sm" onclick="bluetoothConnect('${device.mac}')">
+                    ${device.connected ? 'Disconnect' : 'Connect'}
+                </button>
+            `;
+            container.appendChild(item);
+        });
+    } catch (error) {
+        console.error('Failed to load Bluetooth devices:', error);
+    }
+}
+
 async function bluetoothScan() {
     const btn = document.getElementById('bt-scan');
     const originalContent = btn.innerHTML;
@@ -521,14 +589,41 @@ async function bluetoothScan() {
 
     try {
         await fetch('/api/bluetooth/scan', { method: 'POST' });
-        setTimeout(() => {
-            btn.innerHTML = originalContent;
-            btn.disabled = false;
-        }, 5000);
+
+        // Poll for devices while scanning (scan takes ~10 seconds)
+        let pollCount = 0;
+        const pollInterval = setInterval(async () => {
+            await loadBluetoothDevices();
+            pollCount++;
+            if (pollCount >= 6) {  // Poll for 12 seconds (6 * 2s)
+                clearInterval(pollInterval);
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
+            }
+        }, 2000);
+
     } catch (error) {
         console.error('Bluetooth scan failed:', error);
         btn.innerHTML = originalContent;
         btn.disabled = false;
+    }
+}
+
+async function bluetoothConnect(mac) {
+    try {
+        await fetch('/api/bluetooth/connect', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mac })
+        });
+
+        // Refresh status and device list after a moment
+        setTimeout(() => {
+            loadBluetoothStatus();
+            loadBluetoothDevices();
+        }, 2000);
+    } catch (error) {
+        console.error('Bluetooth connect failed:', error);
     }
 }
 
@@ -537,6 +632,9 @@ async function bluetoothDisconnect() {
         await fetch('/api/bluetooth/disconnect', { method: 'POST' });
         document.getElementById('bt-status').textContent = 'Disconnected';
         document.getElementById('bt-device').textContent = 'None';
+
+        // Refresh device list
+        setTimeout(loadBluetoothDevices, 1000);
     } catch (error) {
         console.error('Bluetooth disconnect failed:', error);
     }

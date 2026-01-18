@@ -118,13 +118,17 @@ class YouTubeService(Thread):
                 pass
 
         # Build mpv command
+        # Use a more permissive format string that falls back gracefully
+        format_str = f'bestvideo[height<={max_resolution}]+bestaudio/best[height<={max_resolution}]/best'
+
         cmd = [
             'mpv',
             '--fullscreen',
             '--osc=yes',
             '--script-opts=osc-layout=bottombar,osc-scalewindowed=2,osc-scalefullscreen=2',
-            f'--ytdl-format=bestvideo[height<={max_resolution}]+bestaudio/best[height<={max_resolution}]',
+            f'--ytdl-format={format_str}',
             f'--input-ipc-server={self.IPC_SOCKET_PATH}',
+            '--no-terminal',  # Don't require a terminal
         ]
 
         # Add audio device if not default
@@ -133,26 +137,42 @@ class YouTubeService(Thread):
 
         cmd.append(url)
 
+        # Set up environment with display access
+        env = os.environ.copy()
+        env['DISPLAY'] = ':0'
+
         try:
             self.queues.log_action(f'Starting YouTube playback: {video_id}')
+            self.queues.log_info(f'mpv command: {" ".join(cmd)}')
 
             # Start mpv process
             self._mpv_process = subprocess.Popen(
                 cmd,
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.PIPE
+                stderr=subprocess.PIPE,
+                env=env
             )
 
             # Update state
             self.state.set_youtube_playing(True, video_id=video_id)
 
             # Wait a moment for mpv to start and create socket
-            time.sleep(1)
+            time.sleep(2)
+
+            # Check if process is still running
+            if self._mpv_process.poll() is not None:
+                # Process exited immediately - read stderr for error
+                stderr = self._mpv_process.stderr.read().decode() if self._mpv_process.stderr else ''
+                self.queues.log_error(f'mpv exited immediately: {stderr[:500]}')
+                self.state.set_youtube_playing(False)
+                self._mpv_process = None
+                return
 
             # Try to get video title
             title = self._get_property('media-title')
             if title:
                 self.state.set_youtube_playing(True, video_id=video_id, title=title)
+                self.queues.log_info(f'Playing: {title}')
 
         except FileNotFoundError:
             self.queues.log_error('mpv not found. Install with: sudo apt install mpv')

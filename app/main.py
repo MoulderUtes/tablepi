@@ -214,6 +214,9 @@ class TablePiApp:
         if cmd_type.startswith('youtube_'):
             youtube_service = self.services.get('youtube')
             if youtube_service:
+                # For play command, minimize PyGame window first
+                if cmd_type == 'youtube_play':
+                    self._hide_for_youtube()
                 youtube_service.send_command(cmd)
 
         # Audio commands
@@ -361,6 +364,44 @@ class TablePiApp:
         self.status_bar.set_last_update(last_fetch)
         self.status_bar.render(status_rect)
 
+    def _hide_for_youtube(self):
+        """Hide PyGame window for YouTube playback."""
+        if not self._youtube_active:
+            self._youtube_active = True
+            pygame.display.iconify()
+            self.queues.log_info('PyGame window hidden for YouTube')
+
+    def _restore_from_youtube(self):
+        """Restore PyGame window after YouTube playback."""
+        if self._youtube_active:
+            self._youtube_active = False
+            # Restore the window by re-setting the display mode
+            config = self.state.get_config()
+            display_config = config.get('display', {})
+            width = display_config.get('width', 800)
+            height = display_config.get('height', 480)
+            fullscreen = display_config.get('fullscreen', True)
+
+            flags = pygame.DOUBLEBUF
+            if fullscreen:
+                flags |= pygame.FULLSCREEN
+
+            try:
+                self.screen = pygame.display.set_mode((width, height), flags)
+            except pygame.error:
+                self.screen = pygame.display.set_mode((width, height))
+
+            pygame.display.set_caption('TablePi')
+            pygame.mouse.set_visible(False)
+            self.queues.log_info('PyGame window restored')
+
+    def _check_youtube_status(self):
+        """Check if YouTube playback has ended and restore window."""
+        if self._youtube_active:
+            youtube_status = self.state.get_youtube_status()
+            if not youtube_status.get('playing', False):
+                self._restore_from_youtube()
+
     def run(self):
         """Main application loop."""
         self.running = True
@@ -374,7 +415,11 @@ class TablePiApp:
         while self.running and not shutdown_event.is_set():
             self._process_queues()
             self._handle_events()
-            self._render()
+            self._check_youtube_status()
+
+            # Only render when not playing YouTube
+            if not self._youtube_active:
+                self._render()
 
             # Update IP periodically
             ip_update_counter += 1
