@@ -867,6 +867,7 @@ function initEventListeners() {
     document.getElementById('yt-stop').addEventListener('click', () => youtubeControl('stop'));
     document.getElementById('yt-vol-up').addEventListener('click', () => youtubeControl('volume_up'));
     document.getElementById('yt-vol-down').addEventListener('click', () => youtubeControl('volume_down'));
+    document.getElementById('yt-captions-toggle').addEventListener('click', () => youtubeControl('captions_toggle'));
 
     // Audio
     document.getElementById('audio-device').addEventListener('change', (e) => {

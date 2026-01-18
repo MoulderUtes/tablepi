@@ -76,6 +76,15 @@ class YouTubeService(Thread):
         elif cmd_type == 'youtube_volume_down':
             self._send_mpv_command(['add', 'volume', -5])
 
+        elif cmd_type == 'youtube_captions_toggle':
+            self._send_mpv_command(['cycle', 'sub-visibility'])
+
+        elif cmd_type == 'youtube_captions_on':
+            self._send_mpv_command(['set_property', 'sub-visibility', True])
+
+        elif cmd_type == 'youtube_captions_off':
+            self._send_mpv_command(['set_property', 'sub-visibility', False])
+
     def _validate_youtube_url(self, url: str) -> Optional[str]:
         """Validate and extract video ID from YouTube URL."""
         patterns = [
@@ -109,6 +118,7 @@ class YouTubeService(Thread):
 
         max_resolution = youtube_config.get('max_resolution', 480)
         audio_device = audio_config.get('output_device', 'default')
+        captions_enabled = youtube_config.get('captions_enabled', False)
 
         # Clean up old socket
         if os.path.exists(self.IPC_SOCKET_PATH):
@@ -118,8 +128,9 @@ class YouTubeService(Thread):
                 pass
 
         # Build mpv command
-        # Use a more permissive format string that falls back gracefully
-        format_str = f'bestvideo[height<={max_resolution}]+bestaudio/best[height<={max_resolution}]/best'
+        # Format: best combined stream at or below max resolution
+        # Fallback to worst if nothing matches (safer than downloading 4K)
+        format_str = f'best[height<={max_resolution}]/worst'
 
         cmd = [
             'mpv',
@@ -128,7 +139,17 @@ class YouTubeService(Thread):
             '--script-opts=osc-layout=bottombar,osc-scalewindowed=2,osc-scalefullscreen=2',
             f'--ytdl-format={format_str}',
             f'--input-ipc-server={self.IPC_SOCKET_PATH}',
-            '--no-terminal',  # Don't require a terminal
+            '--no-terminal',
+            '--cache=yes',              # Enable cache for smoother playback
+            '--cache-secs=10',          # Cache 10 seconds ahead
+            '--demuxer-max-bytes=50M',  # Allow larger demuxer buffer
+            '--ytdl-raw-options=no-check-certificates=',  # Skip cert check (faster)
+            # Subtitle/caption settings
+            '--slang=en,eng',           # Prefer English subtitles
+            '--ytdl-raw-options-append=write-auto-subs=',  # Get auto-generated captions
+            '--ytdl-raw-options-append=sub-langs=en.*,en',  # Get English captions
+            '--sub-auto=fuzzy',         # Auto-load subtitles
+            f'--sub-visibility={"yes" if captions_enabled else "no"}',  # Show/hide based on config
         ]
 
         # Add audio device if not default

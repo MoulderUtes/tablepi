@@ -102,34 +102,38 @@ class BluetoothService(Thread):
         try:
             self.queues.log_action('Starting Bluetooth scan')
 
-            # Start scan
-            subprocess.run(
+            # Start scan as a background process
+            scan_proc = subprocess.Popen(
                 ['bluetoothctl', 'scan', 'on'],
-                capture_output=True,
-                timeout=2
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                stdin=subprocess.DEVNULL
             )
 
-            # Wait for scan duration
-            time.sleep(duration)
+            # Poll for devices during scan
+            start_time = time.time()
+            while time.time() - start_time < duration:
+                # Refresh device list every 2 seconds
+                self._refresh_device_list()
+                time.sleep(2)
 
             # Stop scan
             subprocess.run(
                 ['bluetoothctl', 'scan', 'off'],
                 capture_output=True,
-                timeout=2
-            )
-
-            # Get list of devices
-            result = subprocess.run(
-                ['bluetoothctl', 'devices'],
-                capture_output=True,
-                text=True,
                 timeout=5
             )
 
-            if result.returncode == 0:
-                self._discovered_devices = self._parse_devices(result.stdout)
-                self.queues.log_action(f'Found {len(self._discovered_devices)} Bluetooth devices')
+            # Final device list refresh
+            self._refresh_device_list()
+            self.queues.log_action(f'Found {len(self._discovered_devices)} Bluetooth devices')
+
+            # Terminate scan process if still running
+            try:
+                scan_proc.terminate()
+                scan_proc.wait(timeout=2)
+            except Exception:
+                pass
 
         except subprocess.TimeoutExpired:
             self.queues.log_error('Bluetooth scan timeout')
@@ -139,6 +143,21 @@ class BluetoothService(Thread):
             self.queues.log_error(f'Bluetooth scan failed: {e}')
 
         self._scanning = False
+
+    def _refresh_device_list(self):
+        """Refresh the list of discovered devices."""
+        try:
+            result = subprocess.run(
+                ['bluetoothctl', 'devices'],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+
+            if result.returncode == 0:
+                self._discovered_devices = self._parse_devices(result.stdout)
+        except Exception:
+            pass
 
     def _parse_devices(self, output: str) -> List[Dict]:
         """Parse bluetoothctl devices output."""
