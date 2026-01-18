@@ -1,0 +1,16 @@
+[Unit]
+Description=TablePi Display
+After=network.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/tablepi
+Environment=DISPLAY=:0
+Environment=PYTHONPATH=/home/pi/tablepi
+ExecStart=/home/pi/tablepi/venv/bin/python -m app.main
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

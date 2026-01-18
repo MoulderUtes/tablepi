@@ -1,0 +1,7 @@
+2026-01-18 12:36:06 | Info     | TablePi starting
+2026-01-18 12:36:06 | Info     | Config watcher started
+2026-01-18 12:36:06 | Info     | Weather service started
+2026-01-18 12:36:06 | Info     | Loaded weather from cache
+2026-01-18 12:36:06 | Info     | Web server starting on 0.0.0.0:5000
+2026-01-18 12:36:07 | API      | Weather fetch OK (472ms)
+2026-01-18 12:40:35 | Action   | Settings updated

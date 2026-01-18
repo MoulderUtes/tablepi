@@ -1,0 +1,28 @@
+{
+  "name": "Light",
+  "background": "#f5f5f5",
+  "clock": {
+    "color": "#1a1a2e",
+    "font_size": 72
+  },
+  "weather": {
+    "label_color": "#666666",
+    "use_dynamic_colors": true,
+    "static_value_color": "#333333"
+  },
+  "graph": {
+    "background": "#ffffff",
+    "high_line": "#e74c3c",
+    "low_line": "#3498db",
+    "grid_color": "#dddddd",
+    "label_color": "#888888"
+  },
+  "status_bar": {
+    "background": "#e0e0e0",
+    "text_color": "#666666"
+  },
+  "accents": {
+    "primary": "#e74c3c",
+    "secondary": "#3498db"
+  }
+}

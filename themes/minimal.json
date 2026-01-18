@@ -1,0 +1,28 @@
+{
+  "name": "Minimal",
+  "background": "#000000",
+  "clock": {
+    "color": "#ffffff",
+    "font_size": 72
+  },
+  "weather": {
+    "label_color": "#555555",
+    "use_dynamic_colors": false,
+    "static_value_color": "#aaaaaa"
+  },
+  "graph": {
+    "background": "#0a0a0a",
+    "high_line": "#ffffff",
+    "low_line": "#666666",
+    "grid_color": "#1a1a1a",
+    "label_color": "#444444"
+  },
+  "status_bar": {
+    "background": "#000000",
+    "text_color": "#333333"
+  },
+  "accents": {
+    "primary": "#ffffff",
+    "secondary": "#333333"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "Neon",
+  "background": "#0a0a0a",
+  "clock": {
+    "color": "#00ff88",
+    "font_size": 72
+  },
+  "weather": {
+    "label_color": "#666666",
+    "use_dynamic_colors": true,
+    "static_value_color": "#00ff88"
+  },
+  "graph": {
+    "background": "#111111",
+    "high_line": "#ff0080",
+    "low_line": "#00ffff",
+    "grid_color": "#222222",
+    "label_color": "#555555"
+  },
+  "status_bar": {
+    "background": "#050505",
+    "text_color": "#444444"
+  },
+  "accents": {
+    "primary": "#ff0080",
+    "secondary": "#00ffff"
+  }
+}

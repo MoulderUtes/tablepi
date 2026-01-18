@@ -1,0 +1,6 @@
+2026-01-18 12:18:55 | Info     | TablePi starting
+2026-01-18 12:18:55 | Info     | Config watcher started
+2026-01-18 12:18:55 | Info     | Weather service started
+2026-01-18 12:18:56 | Info     | Loaded weather from cache
+2026-01-18 12:18:56 | Info     | Web server starting on 0.0.0.0:5000
+2026-01-18 12:18:56 | Error    | Weather API: Invalid API key

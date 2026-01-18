@@ -1,0 +1,39 @@
+2026-01-18 12:13:50 | Info     | TablePi starting
+2026-01-18 12:13:50 | Info     | Config watcher started
+2026-01-18 12:13:50 | Info     | Weather service started
+2026-01-18 12:13:56 | Error    | Weather API: Invalid API key
+2026-01-18 12:14:01 | Action   | Configuration reloaded
+2026-01-18 12:14:04 | Error    | Weather API: Invalid API key
+2026-01-18 12:14:14 | Error    | Weather API: Invalid API key
+2026-01-18 12:14:24 | Error    | Weather API: Invalid API key
+2026-01-18 12:14:34 | Error    | Weather API: Invalid API key
+2026-01-18 12:14:40 | Action   | Configuration reloaded
+2026-01-18 12:14:46 | Action   | Weather refresh requested
+2026-01-18 12:14:48 | Action   | Configuration reloaded
+2026-01-18 12:14:50 | Error    | Weather API: Invalid API key
+2026-01-18 12:15:00 | Error    | Weather API: Invalid API key
+2026-01-18 12:15:10 | Error    | Weather API: Invalid API key
+2026-01-18 12:15:12 | Action   | Settings updated
+2026-01-18 12:15:14 | Error    | Weather API: Invalid API key
+2026-01-18 12:15:24 | Error    | Weather API: Invalid API key
+2026-01-18 12:15:35 | Error    | Weather API: Invalid API key
+2026-01-18 12:15:45 | Error    | Weather API: Invalid API key
+2026-01-18 12:15:55 | Error    | Weather API: Invalid API key
+2026-01-18 12:16:05 | Error    | Weather API: Invalid API key
+2026-01-18 12:16:15 | Error    | Weather API: Invalid API key
+2026-01-18 12:16:26 | Error    | Weather API: Invalid API key
+2026-01-18 12:16:36 | Error    | Weather API: Invalid API key
+2026-01-18 12:16:46 | Error    | Weather API: Invalid API key
+2026-01-18 12:16:56 | Error    | Weather API: Invalid API key
+2026-01-18 12:17:06 | Error    | Weather API: Invalid API key
+2026-01-18 12:17:16 | Error    | Weather API: Invalid API key
+2026-01-18 12:17:27 | Error    | Weather API: Invalid API key
+2026-01-18 12:17:37 | Error    | Weather API: Invalid API key
+2026-01-18 12:17:47 | Error    | Weather API: Invalid API key
+2026-01-18 12:17:57 | Error    | Weather API: Invalid API key
+2026-01-18 12:18:07 | Error    | Weather API: Invalid API key
+2026-01-18 12:18:16 | Action   | Settings updated
+2026-01-18 12:18:17 | API      | Weather fetch OK (122ms)
+2026-01-18 12:18:33 | Action   | Settings updated
+2026-01-18 12:18:34 | Action   | Weather refresh requested
+2026-01-18 12:18:39 | Action   | Selected day 3 for hourly view

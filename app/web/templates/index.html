@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TablePi Control Panel</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.1/css/all.min.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-table-cells"></i>
+                    <span>TablePi</span>
+                </div>
+                <div class="connection-badge" id="connection-status">
+                    <i class="fas fa-circle"></i>
+                    <span>Connecting</span>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-tab="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="youtube">
+                    <i class="fab fa-youtube"></i>
+                    <span>YouTube</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="themes">
+                    <i class="fas fa-palette"></i>
+                    <span>Themes</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="audio">
+                    <i class="fas fa-volume-high"></i>
+                    <span>Audio</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="bluetooth">
+                    <i class="fab fa-bluetooth-b"></i>
+                    <span>Bluetooth</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="logs">
+                    <i class="fas fa-list-ul"></i>
+                    <span>Logs</span>
+                </a>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="version">v0.1.0</div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Settings Tab -->
+            <section id="settings" class="tab-content active">
+                <div class="page-header">
+                    <h1><i class="fas fa-cog"></i> Settings</h1>
+                    <p>Configure your TablePi display</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-cloud-sun"></i> Weather Configuration</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="weather-api-key">
+                                <i class="fas fa-key"></i> OpenWeatherMap API Key
+                            </label>
+                            <div class="input-group">
+                                <input type="password" id="weather-api-key" placeholder="Enter your API key">
+                                <button type="button" class="input-addon" onclick="togglePassword('weather-api-key')">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                            <span class="form-hint">Get your free API key at openweathermap.org</span>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="weather-lat"><i class="fas fa-location-dot"></i> Latitude</label>
+                                <input type="number" id="weather-lat" step="0.0001" placeholder="40.7128">
+                            </div>
+                            <div class="form-group">
+                                <label for="weather-lon"><i class="fas fa-location-dot"></i> Longitude</label>
+                                <input type="number" id="weather-lon" step="0.0001" placeholder="-74.0060">
+                            </div>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="units"><i class="fas fa-temperature-half"></i> Units</label>
+                                <select id="units">
+                                    <option value="imperial">Imperial (°F)</option>
+                                    <option value="metric">Metric (°C)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="update-interval"><i class="fas fa-clock"></i> Update Interval</label>
+                                <select id="update-interval">
+                                    <option value="5">Every 5 minutes</option>
+                                    <option value="15">Every 15 minutes</option>
+                                    <option value="30" selected>Every 30 minutes</option>
+                                    <option value="60">Every hour</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="status-card" id="weather-status-box">
+                            <div class="status-icon" id="weather-status-icon">
+                                <i class="fas fa-circle-question"></i>
+                            </div>
+                            <div class="status-info">
+                                <span class="status-label">Weather Status</span>
+                                <span class="status-value" id="weather-status-text">Unknown</span>
+                            </div>
+                            <div class="status-meta">
+                                <span>Last Update: <strong id="weather-last-update">Never</strong></span>
+                            </div>
+                            <button class="btn btn-sm" id="refresh-weather">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-clock"></i> Clock Settings</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="timezone"><i class="fas fa-globe"></i> Timezone</label>
+                                <select id="timezone">
+                                    <option value="America/New_York">America/New_York (EST)</option>
+                                    <option value="America/Chicago">America/Chicago (CST)</option>
+                                    <option value="America/Denver">America/Denver (MST)</option>
+                                    <option value="America/Los_Angeles">America/Los_Angeles (PST)</option>
+                                    <option value="Europe/London">Europe/London (GMT)</option>
+                                    <option value="Europe/Paris">Europe/Paris (CET)</option>
+                                    <option value="Asia/Tokyo">Asia/Tokyo (JST)</option>
+                                    <option value="UTC">UTC</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="clock-format"><i class="fas fa-hourglass-half"></i> Clock Format</label>
+                                <select id="clock-format">
+                                    <option value="12">12-hour (AM/PM)</option>
+                                    <option value="24">24-hour</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="btn-row">
+                    <button class="btn btn-primary btn-lg" id="save-settings">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                </div>
+            </section>
+
+            <!-- YouTube Tab -->
+            <section id="youtube" class="tab-content">
+                <div class="page-header">
+                    <h1><i class="fab fa-youtube"></i> YouTube Player</h1>
+                    <p>Play videos on your TablePi display</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-play-circle"></i> Play Video</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="youtube-url"><i class="fas fa-link"></i> YouTube URL</label>
+                            <div class="input-group">
+                                <input type="text" id="youtube-url" placeholder="https://youtube.com/watch?v=...">
+                                <button class="btn btn-primary input-addon" id="youtube-play">
+                                    <i class="fas fa-play"></i> Play
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="status-card">
+                            <div class="status-icon status-idle">
+                                <i class="fas fa-circle-pause"></i>
+                            </div>
+                            <div class="status-info">
+                                <span class="status-label">Playback Status</span>
+                                <span class="status-value" id="yt-status-text">Idle</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" id="youtube-controls" style="display: none;">
+                    <div class="card-header">
+                        <h2><i class="fas fa-gamepad"></i> Remote Controls</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="controls-grid">
+                            <button class="btn btn-lg" id="yt-pause">
+                                <i class="fas fa-pause"></i> Pause
+                            </button>
+                            <button class="btn btn-lg btn-primary" id="yt-resume">
+                                <i class="fas fa-play"></i> Resume
+                            </button>
+                            <button class="btn btn-lg btn-danger" id="yt-stop">
+                                <i class="fas fa-stop"></i> Stop
+                            </button>
+                        </div>
+                        <div class="volume-controls">
+                            <button class="btn" id="yt-vol-down">
+                                <i class="fas fa-volume-down"></i>
+                            </button>
+                            <div class="volume-bar">
+                                <div class="volume-level"></div>
+                            </div>
+                            <button class="btn" id="yt-vol-up">
+                                <i class="fas fa-volume-up"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Themes Tab -->
+            <section id="themes" class="tab-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-palette"></i> Themes</h1>
+                    <p>Customize the look of your display</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-swatchbook"></i> Select Theme</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="theme-select"><i class="fas fa-brush"></i> Current Theme</label>
+                            <select id="theme-select"></select>
+                        </div>
+                        <button class="btn btn-primary" id="apply-theme">
+                            <i class="fas fa-check"></i> Apply Theme
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-edit"></i> Theme Editor</h2>
+                    </div>
+                    <div class="card-body">
+                        <p class="form-hint">Customize colors for the selected theme</p>
+
+                        <div class="color-grid">
+                            <div class="color-item">
+                                <label for="color-background">Background</label>
+                                <input type="color" id="color-background" value="#1a1a2e">
+                                <span class="color-value">#1a1a2e</span>
+                            </div>
+                            <div class="color-item">
+                                <label for="color-clock">Clock</label>
+                                <input type="color" id="color-clock" value="#ffffff">
+                                <span class="color-value">#ffffff</span>
+                            </div>
+                            <div class="color-item">
+                                <label for="color-high-line">Graph High</label>
+                                <input type="color" id="color-high-line" value="#ff6b6b">
+                                <span class="color-value">#ff6b6b</span>
+                            </div>
+                            <div class="color-item">
+                                <label for="color-low-line">Graph Low</label>
+                                <input type="color" id="color-low-line" value="#4ecdc4">
+                                <span class="color-value">#4ecdc4</span>
+                            </div>
+                            <div class="color-item">
+                                <label for="color-accent">Accent</label>
+                                <input type="color" id="color-accent" value="#e94560">
+                                <span class="color-value">#e94560</span>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="dynamic-colors" checked>
+                                <span class="checkmark"></span>
+                                <i class="fas fa-magic"></i> Use dynamic weather-based colors
+                            </label>
+                        </div>
+
+                        <div class="btn-row">
+                            <button class="btn" id="save-theme">
+                                <i class="fas fa-save"></i> Save Theme
+                            </button>
+                            <button class="btn btn-outline" id="save-theme-as">
+                                <i class="fas fa-plus"></i> Save As New
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Audio Tab -->
+            <section id="audio" class="tab-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-volume-high"></i> Audio</h1>
+                    <p>Configure audio output settings</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-speaker"></i> Output Device</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-group">
+                            <label for="audio-device"><i class="fas fa-headphones"></i> Select Device</label>
+                            <select id="audio-device">
+                                <option value="default">Default System Output</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-sliders"></i> Volume Control</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="volume-slider-container">
+                            <i class="fas fa-volume-off"></i>
+                            <input type="range" id="audio-volume" min="0" max="100" value="80" class="volume-slider">
+                            <i class="fas fa-volume-high"></i>
+                            <span class="volume-display" id="volume-value">80%</span>
+                        </div>
+
+                        <button class="btn" id="test-audio">
+                            <i class="fas fa-music"></i> Test Audio
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Bluetooth Tab -->
+            <section id="bluetooth" class="tab-content">
+                <div class="page-header">
+                    <h1><i class="fab fa-bluetooth-b"></i> Bluetooth</h1>
+                    <p>Connect to Bluetooth speakers</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-signal"></i> Connection Status</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="status-card status-disconnected">
+                            <div class="status-icon">
+                                <i class="fab fa-bluetooth-b"></i>
+                            </div>
+                            <div class="status-info">
+                                <span class="status-label">Status</span>
+                                <span class="status-value" id="bt-status">Disconnected</span>
+                            </div>
+                            <div class="status-meta">
+                                <span>Device: <strong id="bt-device">None</strong></span>
+                            </div>
+                        </div>
+
+                        <div class="btn-row">
+                            <button class="btn btn-primary" id="bt-scan">
+                                <i class="fas fa-magnifying-glass"></i> Scan for Devices
+                            </button>
+                            <button class="btn btn-danger" id="bt-disconnect">
+                                <i class="fas fa-unlink"></i> Disconnect
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-list"></i> Available Devices</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="bt-devices" class="device-list">
+                            <div class="empty-state">
+                                <i class="fas fa-bluetooth"></i>
+                                <p>No devices found. Click "Scan for Devices" to search.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-gear"></i> Options</h2>
+                    </div>
+                    <div class="card-body">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="bt-auto-connect" checked>
+                            <span class="checkmark"></span>
+                            <i class="fas fa-plug"></i> Auto-reconnect on startup
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Logs Tab -->
+            <section id="logs" class="tab-content">
+                <div class="page-header">
+                    <h1><i class="fas fa-list-ul"></i> Activity Logs</h1>
+                    <p>View system activity and API requests</p>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-filter"></i> Filter Logs</h2>
+                        <div class="card-actions">
+                            <select id="log-filter" class="filter-select">
+                                <option value="">All Logs</option>
+                                <option value="API">API Requests</option>
+                                <option value="Action">User Actions</option>
+                                <option value="Error">Errors</option>
+                                <option value="Info">Info</option>
+                            </select>
+                            <button class="btn btn-sm" id="clear-logs">
+                                <i class="fas fa-trash"></i> Clear
+                            </button>
+                            <button class="btn btn-sm" id="export-logs">
+                                <i class="fas fa-download"></i> Export
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body no-padding">
+                        <div class="log-container" id="log-container">
+                            <div class="log-entries" id="log-entries">
+                                <div class="empty-state">
+                                    <i class="fas fa-scroll"></i>
+                                    <p>No log entries yet</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script>
+        // Toggle password visibility
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        }
+
+        // Update color value display
+        document.querySelectorAll('input[type="color"]').forEach(input => {
+            input.addEventListener('input', (e) => {
+                const valueSpan = e.target.nextElementSibling;
+                if (valueSpan && valueSpan.classList.contains('color-value')) {
+                    valueSpan.textContent = e.target.value;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

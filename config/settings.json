@@ -1,0 +1,35 @@
+{
+  "display": {
+    "width": 800,
+    "height": 480,
+    "fullscreen": true,
+    "fps": 30
+  },
+  "clock": {
+    "timezone": "America/Denver",
+    "format_24h": false
+  },
+  "weather": {
+    "api_key": "78f01ca6bc5f0527e99fba8ba2373469",
+    "lat": 40.2335,
+    "lon": -111.667,
+    "units": "imperial",
+    "update_interval_minutes": 5
+  },
+  "theme": "default",
+  "audio": {
+    "output_device": "default",
+    "volume": 80
+  },
+  "bluetooth": {
+    "auto_connect": true
+  },
+  "web": {
+    "port": 5000,
+    "host": "0.0.0.0"
+  },
+  "youtube": {
+    "max_resolution": 480,
+    "default_volume": 80
+  }
+}

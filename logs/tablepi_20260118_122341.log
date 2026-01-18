@@ -1,0 +1,16 @@
+2026-01-18 12:23:41 | Info     | TablePi starting
+2026-01-18 12:23:41 | Info     | Config watcher started
+2026-01-18 12:23:41 | Info     | Weather service started
+2026-01-18 12:23:41 | Info     | Loaded weather from cache
+2026-01-18 12:23:41 | Info     | Web server starting on 0.0.0.0:5000
+2026-01-18 12:23:41 | Error    | Weather API: Invalid API key
+2026-01-18 12:24:12 | Action   | Theme changed to "dark"
+2026-01-18 12:24:14 | Action   | Theme changed to "neon"
+2026-01-18 12:24:16 | Action   | Theme changed to "minimal"
+2026-01-18 12:24:19 | Action   | Theme changed to "default"
+2026-01-18 12:24:19 | Action   | Configuration reloaded
+2026-01-18 12:24:39 | Action   | YouTube play: DH_HVTpj2Oo
+2026-01-18 12:24:48 | Action   | YouTube pause
+2026-01-18 12:24:48 | Action   | YouTube pause
+2026-01-18 12:24:56 | Action   | Selected day 1 for hourly view
+2026-01-18 12:27:46 | Action   | Selected day 2 for hourly view

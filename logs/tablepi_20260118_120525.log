@@ -1,0 +1,10 @@
+2026-01-18 12:05:25 | Info     | TablePi starting
+2026-01-18 12:05:25 | Info     | Config watcher started
+2026-01-18 12:05:25 | Info     | Weather service started
+2026-01-18 12:05:25 | Error    | Weather API key not configured
+2026-01-18 12:06:56 | Action   | Settings updated
+2026-01-18 12:07:09 | Action   | Theme changed to "light"
+2026-01-18 12:07:17 | Action   | Bluetooth scan started
+2026-01-18 12:07:32 | Action   | Settings updated
+2026-01-18 12:07:32 | Action   | Configuration reloaded
+2026-01-18 12:07:36 | Action   | Settings updated

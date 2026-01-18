@@ -1,0 +1,28 @@
+{
+  "name": "Default",
+  "background": "#1a1a2e",
+  "clock": {
+    "color": "#ffffff",
+    "font_size": 72
+  },
+  "weather": {
+    "label_color": "#888888",
+    "use_dynamic_colors": true,
+    "static_value_color": "#ffffff"
+  },
+  "graph": {
+    "background": "#16213e",
+    "high_line": "#ff6b6b",
+    "low_line": "#4ecdc4",
+    "grid_color": "#333333",
+    "label_color": "#888888"
+  },
+  "status_bar": {
+    "background": "#0f0f1a",
+    "text_color": "#666666"
+  },
+  "accents": {
+    "primary": "#e94560",
+    "secondary": "#0f3460"
+  }
+}

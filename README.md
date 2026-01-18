@@ -44,6 +44,26 @@ See [PLANNING_MAIN.md](PLANNING_MAIN.md) for detailed setup instructions.
 - **Video:** mpv + yt-dlp
 - **Weather:** OpenWeatherMap One Call API 3.0
 
+## Changelog
+
+### v0.1.0 (Initial Release)
+- Clock display with configurable 12/24h format and timezone
+- Weather widget with current conditions display
+- 7-day forecast graph (touch to view details)
+- Dynamic weather-based colors (temp, humidity, UV, wind, rain)
+- Web control panel with settings, themes, YouTube, audio, Bluetooth tabs
+- Theme system with 5 built-in themes (Dark, Light, Neon, Minimal, Default)
+- Theme editor in web UI
+- Activity logging with filtering and export
+- Multi-threaded architecture for responsive UI
+- Config hot-reload via file watcher
+
+### Planned
+- Full YouTube playback via mpv
+- Hourly forecast detail view
+- Bluetooth device scanning and pairing
+- Audio device enumeration and switching
+
 ## License
 
 This is free and unencumbered software released into the public domain.
